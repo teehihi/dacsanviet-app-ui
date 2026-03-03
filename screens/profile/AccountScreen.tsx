@@ -14,8 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAuthStore } from '../../store/authStore';
-import { ApiService } from '../../services/api';
-import { API_HOST_REAL_DEVICE, API_PORT } from '@env';
+import { ApiService, formatImageUrl } from '../../services/api';
 
 interface AccountScreenProps {
   navigation: any;
@@ -28,9 +27,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
 
   const getAvatarUrl = () => {
     if (user?.avatarUrl) {
-      const host = API_HOST_REAL_DEVICE || 'localhost';
-      const port = API_PORT || '3001';
-      return `http://${host}:${port}${user.avatarUrl}`;
+      return formatImageUrl(user.avatarUrl);
     }
     return null;
   };
@@ -178,6 +175,11 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Mục chính</Text>
           <View style={styles.menuCard}>
+            <MenuItem
+              icon="receipt-text"
+              title="Đơn hàng của tôi"
+              onPress={() => navigation.navigate('Orders')}
+            />
             <MenuItem
               icon="wallet"
               title="Ví của tôi"

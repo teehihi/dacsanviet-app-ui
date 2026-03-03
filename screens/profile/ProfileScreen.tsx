@@ -14,9 +14,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useFocusEffect } from '@react-navigation/native';
-import { ApiService } from '../../services/api';
+import { ApiService, formatImageUrl } from '../../services/api';
 import { User } from '../../types/api';
-import { API_HOST_REAL_DEVICE, API_PORT } from '@env';
 
 interface ProfileScreenProps {
   navigation: any;
@@ -130,9 +129,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   const getAvatarUrl = () => {
     if (user?.avatarUrl) {
-      const host = API_HOST_REAL_DEVICE || 'localhost';
-      const port = API_PORT || '3001';
-      return `http://${host}:${port}${user.avatarUrl}`;
+      return formatImageUrl(user.avatarUrl);
     }
     return null;
   };

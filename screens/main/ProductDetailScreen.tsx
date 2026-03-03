@@ -15,6 +15,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Product as ApiProduct } from '../../types/api';
 import { getProductImage } from '../../services/api';
 import { stripHtmlTags } from '../../utils/textUtils';
+import { useCartStore } from '../../store/cartStore';
+import { Alert } from 'react-native';
 
 const { width } = Dimensions.get('window');
 
@@ -29,6 +31,7 @@ interface ProductDetailScreenProps {
 
 const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ navigation, route }) => {
   const { product } = route.params;
+  const { addItem } = useCartStore();
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -58,12 +61,39 @@ const ProductDetailScreen: React.FC<ProductDetailScreenProps> = ({ navigation, r
     }
   };
 
-  const handleAddToCart = () => {
-    // TODO: Add to cart logic
+  const handleAddToCart = async () => {
+    try {
+      await addItem(
+        product.id,
+        product.name,
+        product.imageUrl,
+        product.price,
+        product.originalPrice,
+        product.category
+      );
+      Alert.alert('Thành công', 'Đã thêm sản phẩm vào giỏ hàng', [
+        { text: 'Tiếp tục mua sắm', style: 'cancel' },
+        { text: 'Xem giỏ hàng', onPress: () => navigation.navigate('Cart' as never) },
+      ]);
+    } catch (error) {
+      Alert.alert('Lỗi', 'Không thể thêm vào giỏ hàng');
+    }
   };
 
-  const handleBuyNow = () => {
-    // TODO: Buy now logic
+  const handleBuyNow = async () => {
+    try {
+      await addItem(
+        product.id,
+        product.name,
+        product.imageUrl,
+        product.price,
+        product.originalPrice,
+        product.category
+      );
+      navigation.navigate('Cart' as never);
+    } catch (error) {
+      Alert.alert('Lỗi', 'Không thể thêm vào giỏ hàng');
+    }
   };
 
   return (

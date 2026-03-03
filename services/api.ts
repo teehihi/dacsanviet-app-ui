@@ -866,4 +866,104 @@ export class ApiService {
       };
     }
   }
+
+  // --- Order APIs ---
+
+  // Create new order
+  static async createOrder(orderData: {
+    items: Array<{
+      productId: number;
+      productName: string;
+      productImage: string;
+      price: number;
+      quantity: number;
+    }>;
+    shippingAddress: {
+      fullName: string;
+      phoneNumber: string;
+      address: string;
+      ward: string;
+      district: string;
+      city: string;
+      note?: string;
+    };
+    paymentMethod: string;
+  }): Promise<ApiResponse<{ order: any }>> {
+    try {
+      const response = await apiClient.post<ApiResponse<{ order: any }>>('/orders', orderData);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        success: false,
+        message: 'Lỗi kết nối mạng. Vui lòng thử lại.',
+      };
+    }
+  }
+
+  // Get user's orders
+  static async getUserOrders(params?: { page?: number; limit?: number; status?: string }): Promise<ApiResponse<any[]> & { pagination?: any }> {
+    try {
+      const response = await apiClient.get<ApiResponse<any[]> & { pagination?: any }>('/orders', { params });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        success: false,
+        message: 'Lỗi kết nối mạng. Vui lòng thử lại.',
+      };
+    }
+  }
+
+  // Get order by ID
+  static async getOrderById(orderId: string): Promise<ApiResponse<{ order: any }>> {
+    try {
+      const response = await apiClient.get<ApiResponse<{ order: any }>>(`/orders/${orderId}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        success: false,
+        message: 'Lỗi kết nối mạng. Vui lòng thử lại.',
+      };
+    }
+  }
+
+  // Cancel order
+  static async cancelOrder(orderId: string): Promise<ApiResponse<{ order: any }>> {
+    try {
+      const response = await apiClient.post<ApiResponse<{ order: any }>>(`/orders/${orderId}/cancel`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        success: false,
+        message: 'Lỗi kết nối mạng. Vui lòng thử lại.',
+      };
+    }
+  }
+
+  // Get order statistics
+  static async getOrderStats(): Promise<ApiResponse<{ stats: any }>> {
+    try {
+      const response = await apiClient.get<ApiResponse<{ stats: any }>>('/orders/stats');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) {
+        return error.response.data;
+      }
+      return {
+        success: false,
+        message: 'Lỗi kết nối mạng. Vui lòng thử lại.',
+      };
+    }
+  }
 }

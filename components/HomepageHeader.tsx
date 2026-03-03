@@ -3,7 +3,7 @@ import { View, TouchableOpacity, Image, TextInput } from 'react-native';
 import { Text } from 'react-native-paper';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { User } from '../types/api';
-import { API_HOST_REAL_DEVICE, API_PORT } from '@env';
+import { formatImageUrl } from '../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
 
 
@@ -25,9 +25,7 @@ export const HomepageHeader: React.FC<HomepageHeaderProps> = ({ user, onAvatarPr
 
   const getAvatarUrl = () => {
     if (user?.avatarUrl) {
-      const host = API_HOST_REAL_DEVICE || 'localhost';
-      const port = API_PORT || '3001';
-      return `http://${host}:${port}${user.avatarUrl}`;
+      return formatImageUrl(user.avatarUrl);
     }
     return null;
   };

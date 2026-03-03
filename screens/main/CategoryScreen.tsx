@@ -20,6 +20,9 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ navigation, route }) =>
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   
   // Filter states
   const [sortBy, setSortBy] = useState<'newest' | 'price_asc' | 'price_desc'>('newest');
@@ -27,38 +30,67 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ navigation, route }) =>
   const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    loadProducts();
+    loadProducts(true);
   }, [categoryName, sortBy]);
 
-  const loadProducts = async () => {
+  const loadProducts = async (reset: boolean = false) => {
     try {
-      setLoading(true);
+      if (reset) {
+        setLoading(true);
+        setPage(1);
+        setProducts([]);
+      } else {
+        setLoadingMore(true);
+      }
+
+      const currentPage = reset ? 1 : page;
       const response = await ApiService.getProducts({
         category: categoryName,
         sort: sortBy,
         minPrice: priceRange.min > 0 ? priceRange.min : undefined,
         maxPrice: priceRange.max < 1000000 ? priceRange.max : undefined,
-        limit: 50
+        page: currentPage,
+        limit: 20
       });
 
       if (response.success && response.data) {
-        setProducts(response.data);
+        const newProducts = response.data;
+        
+        if (reset) {
+          setProducts(newProducts);
+        } else {
+          setProducts(prev => [...prev, ...newProducts]);
+        }
+
+        // Check if there are more products
+        setHasMore(newProducts.length === 20);
+        
+        if (!reset) {
+          setPage(currentPage + 1);
+        }
       } else {
         console.error('❌ Category products failed:', response?.message);
-        setProducts([]);
+        if (reset) setProducts([]);
       }
     } catch (error: any) {
       console.error('❌ Category products error:', error?.message);
-      setProducts([]);
+      if (reset) setProducts([]);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   const onRefresh = React.useCallback(() => {
     setRefreshing(true);
-    loadProducts().finally(() => setRefreshing(false));
+    loadProducts(true).finally(() => setRefreshing(false));
   }, [categoryName, sortBy, priceRange]);
+
+  const handleLoadMore = () => {
+    if (!loadingMore && hasMore) {
+      loadProducts(false);
+    }
+  };
 
   const handleProductPress = (product: Product) => {
     navigation.navigate('ProductDetail', { product });
@@ -71,13 +103,14 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ navigation, route }) =>
 
   const applyPriceFilter = () => {
     setShowFilters(false);
-    loadProducts();
+    loadProducts(true);
   };
 
   const resetFilters = () => {
     setSortBy('newest');
     setPriceRange({ min: 0, max: 1000000 });
     setShowFilters(false);
+    loadProducts(true);
   };
 
   const renderProduct = ({ item }: { item: Product }) => (
@@ -218,10 +251,19 @@ const CategoryScreen: React.FC<CategoryScreenProps> = ({ navigation, route }) =>
           keyExtractor={(item) => item.id.toString()}
           numColumns={2}
           columnWrapperStyle={{ justifyContent: 'space-between', paddingHorizontal: 16 }}
-          contentContainerStyle={{ paddingTop: 16, paddingBottom: 120 }} // Extra space for shadow
+          contentContainerStyle={{ paddingTop: 16, paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
           refreshing={refreshing}
           onRefresh={onRefresh}
+          onEndReached={handleLoadMore}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={
+            loadingMore ? (
+              <View className="py-4">
+                <Text className="text-center text-gray-500">Đang tải thêm...</Text>
+              </View>
+            ) : null
+          }
           ListEmptyComponent={
             <View className="flex-1 items-center justify-center py-20">
               <MaterialCommunityIcons name="package-variant" size={64} color="#d1d5db" />
