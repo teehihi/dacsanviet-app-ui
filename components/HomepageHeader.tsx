@@ -5,17 +5,21 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { User } from '../types/api';
 import { formatImageUrl } from '../services/api';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useCartStore } from '../store/cartStore';
 
 
 interface HomepageHeaderProps {
   user: User | null;
   onAvatarPress: () => void;
   onSearchSubmit: (query: string) => void;
+  onCartPress: () => void;
 }
 
-export const HomepageHeader: React.FC<HomepageHeaderProps> = ({ user, onAvatarPress, onSearchSubmit }) => {
+export const HomepageHeader: React.FC<HomepageHeaderProps> = ({ user, onAvatarPress, onSearchSubmit, onCartPress }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const { getTotalItems } = useCartStore();
+  const cartCount = getTotalItems();
 
   const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
@@ -91,19 +95,26 @@ export const HomepageHeader: React.FC<HomepageHeaderProps> = ({ user, onAvatarPr
             )}
           </View>
 
-          {/* Rewards Icon */}
+          {/* Cart Icon */}
           <TouchableOpacity 
-            className="w-11 h-11 bg-yellow-400 rounded-full items-center justify-center ml-3"
+            className="items-center justify-center ml-3"
+            onPress={onCartPress}
             activeOpacity={0.7}
-            style={{
-              shadowColor: '#fbbf24',
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 4,
-              elevation: 4,
-            }}
+            style={{ width: 44, height: 44 }}
           >
-            <MaterialCommunityIcons name="gift" size={22} color="white" />
+            <MaterialCommunityIcons name="cart-outline" size={26} color="white" />
+            {cartCount > 0 && (
+              <View style={{
+                position: 'absolute', top: 2, right: 2,
+                backgroundColor: '#ef4444', borderRadius: 10,
+                minWidth: 18, height: 18, alignItems: 'center', justifyContent: 'center',
+                paddingHorizontal: 3, borderWidth: 1.5, borderColor: 'white',
+              }}>
+                <Text style={{ color: 'white', fontSize: 9, fontWeight: '700' }}>
+                  {cartCount > 99 ? '99+' : cartCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           {/* User Avatar */}

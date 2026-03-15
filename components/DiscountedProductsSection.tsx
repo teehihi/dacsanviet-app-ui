@@ -88,7 +88,7 @@ export const DiscountedProductsSection: React.FC<DiscountedProductsSectionProps>
           {/* Review Count */}
           <View className="flex-row items-center ml-2">
             <MaterialCommunityIcons name="message-text" size={14} color="#6b7280" />
-            <Text className="text-xs text-gray-500 ml-1">{item.soldCount || 97}</Text>
+            <Text className="text-xs text-gray-500 ml-1">{String(item.soldCount || 97)}</Text>
           </View>
         </View>
         
@@ -129,9 +129,9 @@ export const DiscountedProductsSection: React.FC<DiscountedProductsSectionProps>
   );
 
   return (
-    <View className="px-4 mt-6" style={{ paddingBottom: 120 }}> {/* Increased padding for shadow */}
+    <View className="px-4 mt-6" style={{ paddingBottom: 120 }}>
       <View className="mb-3 flex-row justify-between items-center">
-        <Text className="text-lg font-bold text-gray-900">⚡ Giảm Giá Sốc</Text>
+        <Text className="text-lg font-bold text-gray-900">Giảm Giá Sốc</Text>
         <TouchableOpacity className="flex-row items-center">
           <MaterialCommunityIcons name="chevron-right" size={24} color="#16a34a" />
         </TouchableOpacity>

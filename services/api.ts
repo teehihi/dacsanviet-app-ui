@@ -957,13 +957,147 @@ export class ApiService {
       const response = await apiClient.get<ApiResponse<{ stats: any }>>('/orders/stats');
       return response.data;
     } catch (error: any) {
-      if (error.response?.data) {
-        return error.response.data;
-      }
-      return {
-        success: false,
-        message: 'Lỗi kết nối mạng. Vui lòng thử lại.',
-      };
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng. Vui lòng thử lại.' };
+    }
+  }
+
+  // --- Review APIs ---
+  static async getProductReviews(productId: number, page = 1, limit = 20): Promise<ApiResponse<{ reviews: any[]; stats: any }>> {
+    try {
+      const response = await apiClient.get(`/reviews/product/${productId}`, { params: { page, limit } });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng.' };
+    }
+  }
+
+  static async createReview(data: { productId: number; orderId: number; rating: number; comment: string }): Promise<ApiResponse<{ id: number; reward: { points: number; couponCode: string } }>> {
+    try {
+      const response = await apiClient.post('/reviews', data);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng.' };
+    }
+  }
+
+  static async getMyReviews(): Promise<ApiResponse<any[]>> {
+    try {
+      const response = await apiClient.get('/reviews/my');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng.' };
+    }
+  }
+
+  static async getReviewableItems(orderId: number): Promise<ApiResponse<any[]>> {
+    try {
+      const response = await apiClient.get(`/reviews/reviewable/${orderId}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng.' };
+    }
+  }
+
+  // --- Favorite APIs ---
+  static async toggleFavorite(productId: number): Promise<ApiResponse<{ liked: boolean }>> {
+    try {
+      const response = await apiClient.post(`/favorites/${productId}`);
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng.' };
+    }
+  }
+
+  static async getFavorites(): Promise<ApiResponse<any[]>> {
+    try {
+      const response = await apiClient.get('/favorites');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng.' };
+    }
+  }
+
+  static async checkFavoriteStatus(productId: number): Promise<ApiResponse<{ isLiked: boolean }>> {
+    try {
+      const response = await apiClient.get(`/favorites/${productId}/status`);
+      return response.data;
+    } catch (error: any) {
+      return { success: true, data: { isLiked: false } };
+    }
+  }
+
+  // --- Similar & Recently Viewed ---
+  static async getSimilarProducts(productId: number, limit = 8): Promise<ApiResponse<Product[]>> {
+    try {
+      const response = await apiClient.get(`/products/${productId}/similar`, { params: { limit } });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng.' };
+    }
+  }
+
+  static async getRecentlyViewed(limit = 10): Promise<ApiResponse<Product[]>> {
+    try {
+      const response = await apiClient.get('/products/recently-viewed', { params: { limit } });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng.' };
+    }
+  }
+
+  static async trackProductView(productId: number): Promise<void> {
+    try {
+      await apiClient.post(`/products/${productId}/view`);
+    } catch (_) {}
+  }
+
+  // --- Coupon & Loyalty Points APIs ---
+  static async getMyCoupons(): Promise<ApiResponse<any[]>> {
+    try {
+      const response = await apiClient.get('/coupons/my');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng.' };
+    }
+  }
+
+  static async validateCoupon(code: string, orderAmount: number): Promise<ApiResponse<{ isValid: boolean; discountAmount: number; type: string; value: number; code: string; couponId: number; source: string }>> {
+    try {
+      const response = await apiClient.post('/coupons/validate', { code, orderAmount });
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng.' };
+    }
+  }
+
+  static async getLoyaltyPoints(): Promise<ApiResponse<{ total_points: number; used_points: number; current_balance: number }>> {
+    try {
+      const response = await apiClient.get('/loyalty-points');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng.' };
+    }
+  }
+
+  static async getPointsHistory(): Promise<ApiResponse<any[]>> {
+    try {
+      const response = await apiClient.get('/loyalty-points/history');
+      return response.data;
+    } catch (error: any) {
+      if (error.response?.data) return error.response.data;
+      return { success: false, message: 'Lỗi kết nối mạng.' };
     }
   }
 }

@@ -50,17 +50,15 @@ const OrderDetailScreen = () => {
 
   const getStatusSteps = (currentStatus: OrderStatus) => {
     const steps = [
-      { status: 'PENDING', label: 'Chờ xác nhận', icon: 'receipt-outline' },
-      { status: 'CONFIRMED', label: 'Đã xác nhận', icon: 'checkmark-circle-outline' },
-      { status: 'PROCESSING', label: 'Đang xử lý', icon: 'time-outline' },
-      { status: 'SHIPPING', label: 'Đang giao hàng', icon: 'car-outline' },
-      { status: 'DELIVERED', label: 'Đã giao', icon: 'checkmark-done-outline' },
+      { status: 'PENDING', label: 'Chờ xác nhận', icon: 'receipt-outline', isActive: false, isCurrent: false },
+      { status: 'CONFIRMED', label: 'Đã xác nhận', icon: 'checkmark-circle-outline', isActive: false, isCurrent: false },
+      { status: 'PROCESSING', label: 'Đang xử lý', icon: 'time-outline', isActive: false, isCurrent: false },
+      { status: 'SHIPPING', label: 'Đang giao hàng', icon: 'car-outline', isActive: false, isCurrent: false },
+      { status: 'DELIVERED', label: 'Đã giao', icon: 'checkmark-done-outline', isActive: false, isCurrent: false },
     ];
 
     if (currentStatus === 'CANCELLED') {
-      return [
-        { status: currentStatus, label: 'Đã hủy', icon: 'close-circle-outline' },
-      ];
+      return [{ status: currentStatus, label: 'Đã hủy', icon: 'close-circle-outline', isActive: true, isCurrent: true }];
     }
 
     const statusOrder = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPING', 'DELIVERED'];
@@ -302,6 +300,29 @@ const OrderDetailScreen = () => {
               onPress={handleCancelOrder}
             >
               <Text className="text-white font-bold text-lg">Hủy đơn hàng</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Review Button - only for DELIVERED orders */}
+        {order.status === 'DELIVERED' && (
+          <View className="px-4 pb-4">
+            <TouchableOpacity
+              className="py-4 rounded-xl items-center"
+              style={{ backgroundColor: '#16a34a' }}
+              onPress={() => {
+                if (order.items.length > 0) {
+                  const item = order.items[0];
+                  (navigation as any).navigate('WriteReview', {
+                    orderId: order.numericId || order.id,
+                    productId: item.productId,
+                    productName: item.productName,
+                    productImage: item.productImage,
+                  });
+                }
+              }}
+            >
+              <Text className="text-white font-bold text-lg">⭐ Đánh giá sản phẩm</Text>
             </TouchableOpacity>
           </View>
         )}

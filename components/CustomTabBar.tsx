@@ -2,17 +2,14 @@ import React, { useRef, useEffect } from 'react';
 import { View, StyleSheet, Dimensions, Platform, Animated, TouchableOpacity, Text } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useCartStore } from '../store/cartStore';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 const TAB_HEIGHT = 65;
-const TAB_WIDTH = width / 5; // Changed from 4 to 5 tabs
+const TAB_WIDTH = width / 4; // 4 tabs
 
 export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
   const translateX = useRef(new Animated.Value(state.index * TAB_WIDTH)).current;
-  const { getTotalItems } = useCartStore();
-  const cartItemCount = getTotalItems();
   
   // Check if current route should hide tab bar
   const currentRoute = state.routes[state.index];
@@ -40,11 +37,20 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, 
     const icons: Record<string, { active: string; inactive: string }> = {
       Home: { active: 'home', inactive: 'home-outline' },
       Search: { active: 'magnify', inactive: 'magnify' },
-      Cart: { active: 'cart', inactive: 'cart-outline' },
       Orders: { active: 'clipboard-text', inactive: 'clipboard-text-outline' },
       Profile: { active: 'account', inactive: 'account-outline' },
     };
     return isFocused ? icons[routeName]?.active : icons[routeName]?.inactive;
+  };
+
+  const getLabel = (routeName: string) => {
+    const labels: Record<string, string> = {
+      Home: 'Trang chủ',
+      Search: 'Tìm kiếm',
+      Orders: 'Đơn hàng',
+      Profile: 'Tài khoản',
+    };
+    return labels[routeName] ?? routeName;
   };
 
   return (
@@ -58,7 +64,7 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, 
           styles.activeIndicator, 
           { 
             transform: [{ translateX }],
-            left: TAB_WIDTH / 2 - 28,
+            left: TAB_WIDTH / 2 - 25,
           }
         ]}
       />
@@ -81,7 +87,6 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, 
           };
 
           const iconName = getIcon(route.name, isFocused);
-          const showBadge = route.name === 'Cart' && cartItemCount > 0;
 
           return (
             <View key={index} style={styles.tabItem}>
@@ -92,17 +97,13 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, 
               >
                 <MaterialCommunityIcons
                   name={iconName as any}
-                  size={isFocused ? 28 : 24}
+                  size={isFocused ? 26 : 23}
                   color={isFocused ? '#ffffff' : '#94a3b8'}
                 />
-                {showBadge && (
-                  <View style={styles.badge}>
-                    <Text style={styles.badgeText}>
-                      {cartItemCount > 99 ? '99+' : cartItemCount}
-                    </Text>
-                  </View>
-                )}
               </TouchableOpacity>
+              <Text style={[styles.tabLabel, isFocused && styles.tabLabelActive]}>
+                {getLabel(route.name)}
+              </Text>
             </View>
           );
         })}
@@ -142,17 +143,27 @@ const styles = StyleSheet.create({
   tabButton: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     position: 'relative',
+  },
+  tabLabel: {
+    fontSize: 10,
+    color: '#94a3b8',
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  tabLabelActive: {
+    color: '#16a34a',
+    fontWeight: '700',
   },
   activeIndicator: {
     position: 'absolute',
     top: 6,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
     backgroundColor: '#16a34a',
     shadowColor: '#16a34a',
     shadowOffset: { width: 0, height: 4 },

@@ -19,19 +19,26 @@ import {
   ChangeEmailScreen,
   ChangePhoneScreen 
 } from '../screens';
+import FavoritesScreen from '../screens/main/FavoritesScreen';
+import WriteReviewScreen from '../screens/main/WriteReviewScreen';
+import CouponsScreen from '../screens/main/CouponsScreen';
 import { CustomTabBar } from '../components/CustomTabBar';
 
 const Tab = createBottomTabNavigator();
 const ProfileStack = createStackNavigator();
 const MainStack = createStackNavigator();
 
-// Main Stack Navigator (Homepage -> Category -> ProductDetail)
+// Main Stack Navigator (Homepage -> Category -> ProductDetail -> Cart -> Checkout)
 const MainStackNavigator = () => {
   return (
     <MainStack.Navigator screenOptions={{ headerShown: false }}>
       <MainStack.Screen name="HomepageMain" component={HomepageScreen} />
       <MainStack.Screen name="Category" component={CategoryScreen} />
       <MainStack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <MainStack.Screen name="Cart" component={CartScreen} />
+      <MainStack.Screen name="Checkout" component={CheckoutScreen} />
+      <MainStack.Screen name="AddressList" component={AddressListScreen} />
+      <MainStack.Screen name="AddAddress" component={AddAddressScreen} />
     </MainStack.Navigator>
   );
 };
@@ -43,6 +50,10 @@ const SearchStackNavigator = () => {
       <MainStack.Screen name="SearchMain" component={SearchScreen} />
       <MainStack.Screen name="Category" component={CategoryScreen} />
       <MainStack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <MainStack.Screen name="Cart" component={CartScreen} />
+      <MainStack.Screen name="Checkout" component={CheckoutScreen} />
+      <MainStack.Screen name="AddressList" component={AddressListScreen} />
+      <MainStack.Screen name="AddAddress" component={AddAddressScreen} />
     </MainStack.Navigator>
   );
 };
@@ -59,17 +70,18 @@ const CartStackNavigator = () => {
   );
 };
 
-// Orders Stack Navigator (Orders -> OrderDetail)
+// Orders Stack Navigator (Orders -> OrderDetail -> WriteReview)
 const OrdersStackNavigator = () => {
   return (
     <MainStack.Navigator screenOptions={{ headerShown: false }}>
       <MainStack.Screen name="OrdersMain" component={OrdersScreen} />
       <MainStack.Screen name="OrderDetail" component={OrderDetailScreen} />
+      <MainStack.Screen name="WriteReview" component={WriteReviewScreen} />
     </MainStack.Navigator>
   );
 };
 
-// Profile Stack Navigator (Account -> ProfileEdit -> ChangePassword/ChangeEmail/ChangePhone)
+// Profile Stack Navigator (Account -> ProfileEdit -> ChangePassword/ChangeEmail/ChangePhone -> Favorites -> Coupons)
 const ProfileStackNavigator = () => {
   return (
     <ProfileStack.Navigator screenOptions={{ headerShown: false }}>
@@ -78,6 +90,8 @@ const ProfileStackNavigator = () => {
       <ProfileStack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <ProfileStack.Screen name="ChangeEmail" component={ChangeEmailScreen} />
       <ProfileStack.Screen name="ChangePhone" component={ChangePhoneScreen} />
+      <ProfileStack.Screen name="Favorites" component={FavoritesScreen} />
+      <ProfileStack.Screen name="Coupons" component={CouponsScreen} />
     </ProfileStack.Navigator>
   );
 };
@@ -97,19 +111,6 @@ export const MainTabNavigator = () => {
       <Tab.Screen 
         name="Search" 
         component={SearchStackNavigator}
-      />
-      <Tab.Screen 
-        name="Cart" 
-        component={CartStackNavigator}
-        options={({ route }) => ({
-          tabBarStyle: ((route) => {
-            const routeName = getFocusedRouteNameFromRoute(route) ?? '';
-            if (['Checkout', 'AddressList', 'AddAddress'].includes(routeName)) {
-              return { display: 'none' };
-            }
-            return { display: 'flex' };
-          })(route),
-        })}
       />
       <Tab.Screen 
         name="Orders" 

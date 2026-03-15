@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,13 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
   const { user, logout } = useAuthStore();
   const scrollY = useRef(new Animated.Value(0)).current;
   const [showCollapsedHeader, setShowCollapsedHeader] = useState(false);
+  const [pointsBalance, setPointsBalance] = useState<number>(0);
+
+  useEffect(() => {
+    ApiService.getLoyaltyPoints().then(res => {
+      if (res.success && res.data) setPointsBalance(res.data.current_balance);
+    }).catch(() => {});
+  }, []);
 
   const getAvatarUrl = () => {
     if (user?.avatarUrl) {
@@ -210,8 +217,8 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
             <MenuItem
               icon="gift"
               title="DacSanVietXu"
-              badge="245 DacSanVietXu"
-              onPress={() => {}}
+              badge={`${pointsBalance.toLocaleString('vi-VN')} Xu`}
+              onPress={() => navigation.navigate('Coupons', { initialTab: 'points' } as never)}
             />
             <MenuItem
               icon="account-group"
@@ -231,8 +238,13 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
           <View style={styles.menuCard}>
             <MenuItem
               icon="heart"
-              title="Yêu thích"
-              onPress={() => {}}
+              title="Sản phẩm yêu thích"
+              onPress={() => navigation.navigate('Favorites')}
+            />
+            <MenuItem
+              icon="ticket-percent"
+              title="Mã giảm giá & Điểm thưởng"
+              onPress={() => navigation.navigate('Coupons')}
             />
             <MenuItem
               icon="silverware-fork-knife"

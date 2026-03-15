@@ -1,91 +1,134 @@
 import React, { useState, useEffect } from 'react';
 import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-  ActivityIndicator,
-  StatusBar,
-  StyleSheet,
-  Image,
+  View, Text, ScrollView, TouchableOpacity, Alert,
+  ActivityIndicator, StatusBar, StyleSheet, Image, TextInput,
+  Modal, FlatList,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useCartStore } from '../../store/cartStore';
 import { useAddressStore } from '../../store/addressStore';
 import { ApiService } from '../../services/api';
 
 const CheckoutScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const routeParams = (route.params || {}) as { appliedCoupon?: any };
+
   const { items, getTotalPrice, clearCart } = useCartStore();
   const { selectedAddress, loadAddresses } = useAddressStore();
   
   const [paymentMethod, setPaymentMethod] = useState<'COD' | 'E_WALLET' | 'BANK_TRANSFER'>('COD');
-  const [shippingMethod, setShippingMethod] = useState('standard');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(routeParams.appliedCoupon || null);
+  const [validatingCoupon, setValidatingCoupon] = useState(false);
+  const [pointsData, setPointsData] = useState<any>(null);
+  const [usePoints, setUsePoints] = useState(false);
+  const [couponModalVisible, setCouponModalVisible] = useState(false);
+  const [myCoupons, setMyCoupons] = useState<any[]>([]);
+  const [loadingCoupons, setLoadingCoupons] = useState(false);
 
   useEffect(() => {
     loadAddresses();
+    loadPoints();
   }, []);
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price);
+  const loadMyCoupons = async () => {
+    setLoadingCoupons(true);
+    try {
+      const res = await ApiService.getMyCoupons();
+      if (res.success) setMyCoupons(res.data || []);
+    } catch {}
+    finally { setLoadingCoupons(false); }
   };
 
+  const openCouponModal = () => {
+    setCouponCode('');
+    loadMyCoupons();
+    setCouponModalVisible(true);
+  };
+
+  const handleApplyCouponCode = async (code: string) => {
+    const trimmed = code.trim().toUpperCase();
+    if (!trimmed) return;
+    setValidatingCoupon(true);
+    try {
+      const res = await ApiService.validateCoupon(trimmed, subtotal);
+      if (res.success && res.data) {
+        setAppliedCoupon(res.data);
+        setCouponModalVisible(false);
+        Alert.alert('Áp dụng thành công', `Giảm ${formatPrice(res.data.discountAmount)}`);
+      } else {
+        Alert.alert('Lỗi', res.message || 'Mã không hợp lệ hoặc đã hết hạn');
+      }
+    } catch {
+      Alert.alert('Lỗi', 'Không thể kiểm tra mã giảm giá');
+    } finally { setValidatingCoupon(false); }
+  };
+
+  const getDiscountLabel = (c: any) => {
+    if (c.discount_type === 'PERCENT' || c.discount_type === 'percentage') {
+      const max = c.max_discount_amount ? ` (tối đa ${formatPrice(c.max_discount_amount)})` : '';
+      return `Giảm ${c.discount_value}%${max}`;
+    }
+    return `Giảm ${formatPrice(c.discount_value)}`;
+  };
+
+  const loadPoints = async () => {
+    try {
+      const res = await ApiService.getLoyaltyPoints();
+      if (res.success) setPointsData(res.data);
+    } catch {}
+  };
+
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(price);
+
   const subtotal = getTotalPrice();
-  const shippingFee = 0; // Free shipping
-  const discount = 0;
-  const total = subtotal - discount + shippingFee;
+  const couponDiscount = appliedCoupon ? appliedCoupon.discountAmount : 0;
+  const pointsBalance = pointsData?.current_balance || 0;
+  const pointsDiscount = usePoints ? Math.min(pointsBalance, subtotal - couponDiscount) : 0;
+  const total = Math.max(0, subtotal - couponDiscount - pointsDiscount);
 
   const handlePlaceOrder = async () => {
     if (!selectedAddress) {
       Alert.alert('Thông báo', 'Vui lòng chọn địa chỉ giao hàng');
       return;
     }
-
     setIsSubmitting(true);
     try {
-      const orderData = {
+      const orderData: any = {
         items: items.map(item => ({
-          productId: item.productId,
-          productName: item.productName,
-          productImage: item.productImage,
-          price: item.price,
-          quantity: item.quantity,
+          productId: item.productId, productName: item.productName,
+          productImage: item.productImage, price: item.price, quantity: item.quantity,
         })),
         shippingAddress: selectedAddress,
         paymentMethod,
       };
+      if (appliedCoupon) {
+        orderData.couponCode = appliedCoupon.code;
+        orderData.discountAmount = couponDiscount;
+      }
+      if (usePoints && pointsDiscount > 0) {
+        orderData.pointsUsed = pointsDiscount;
+      }
 
       const response = await ApiService.createOrder(orderData);
-
       if (response.success && response.data) {
         await clearCart();
-
         Alert.alert(
           'Đặt hàng thành công!',
-          `Mã đơn hàng: ${response.data.order.id}\nChúng tôi sẽ xác nhận đơn hàng trong vòng 30 phút.`,
-          [
-            {
-              text: 'Xem đơn hàng',
-              onPress: () => navigation.navigate('Orders' as never),
-            },
-          ]
+          `Mã đơn hàng: ${response.data.order.id}\nChúng tôi sẽ xác nhận trong vòng 30 phút.`,
+          [{ text: 'Xem đơn hàng', onPress: () => navigation.navigate('Orders' as never) }]
         );
       } else {
         Alert.alert('Lỗi', response.message || 'Không thể đặt hàng. Vui lòng thử lại.');
       }
-    } catch (error) {
+    } catch {
       Alert.alert('Lỗi', 'Không thể đặt hàng. Vui lòng thử lại.');
-      console.error('Place order error:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
+    } finally { setIsSubmitting(false); }
   };
 
   return (
@@ -180,6 +223,66 @@ const CheckoutScreen = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Coupon */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <MaterialCommunityIcons name="ticket-percent" size={20} color="#16a34a" />
+            <Text style={styles.sectionTitle}>Mã giảm giá</Text>
+          </View>
+          {appliedCoupon ? (
+            <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#f0fdf4', borderRadius: 8, padding: 12, borderWidth: 1, borderColor: '#bbf7d0' }}>
+              <MaterialCommunityIcons name="check-circle" size={20} color="#16a34a" />
+              <Text style={{ flex: 1, marginLeft: 8, color: '#15803d', fontWeight: '600' }}>{appliedCoupon.code} - Giảm {formatPrice(appliedCoupon.discountAmount)}</Text>
+              <TouchableOpacity onPress={() => setAppliedCoupon(null)}>
+                <Ionicons name="close-circle" size={20} color="#6b7280" />
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TextInput
+                value={couponCode}
+                onChangeText={setCouponCode}
+                placeholder="Nhập mã giảm giá"
+                style={{ flex: 1, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14 }}
+                autoCapitalize="characters"
+              />
+              <TouchableOpacity
+                onPress={() => handleApplyCouponCode(couponCode)}
+                disabled={validatingCoupon}
+                style={{ backgroundColor: '#16a34a', paddingHorizontal: 16, borderRadius: 8, justifyContent: 'center' }}
+              >
+                {validatingCoupon ? <ActivityIndicator color="white" size="small" /> : <Text style={{ color: 'white', fontWeight: '600' }}>Áp dụng</Text>}
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={openCouponModal}
+                style={{ backgroundColor: '#f0fdf4', paddingHorizontal: 12, borderRadius: 8, justifyContent: 'center', borderWidth: 1, borderColor: '#bbf7d0' }}
+              >
+                <MaterialCommunityIcons name="ticket-percent-outline" size={20} color="#16a34a" />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+
+        {/* Loyalty Points */}
+        {pointsData && pointsData.current_balance > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Ionicons name="star" size={20} color="#f59e0b" />
+              <Text style={styles.sectionTitle}>Điểm tích lũy</Text>
+            </View>
+            <TouchableOpacity
+              style={{ flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: usePoints ? '#f59e0b' : '#e5e7eb', backgroundColor: usePoints ? '#fffbeb' : 'white' }}
+              onPress={() => setUsePoints(!usePoints)}
+            >
+              <Ionicons name={usePoints ? 'checkbox' : 'square-outline'} size={22} color={usePoints ? '#f59e0b' : '#9ca3af'} />
+              <View style={{ flex: 1, marginLeft: 10 }}>
+                <Text style={{ fontSize: 14, fontWeight: '600', color: '#1f2937' }}>Dùng {pointsData.current_balance.toLocaleString()} điểm</Text>
+                <Text style={{ fontSize: 12, color: '#6b7280', marginTop: 2 }}>Giảm {formatPrice(Math.min(pointsData.current_balance, subtotal - couponDiscount))}</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Payment Method */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -218,10 +321,17 @@ const CheckoutScreen = () => {
           <Text style={styles.freeShipping}>Miễn phí</Text>
         </View>
 
-        {discount > 0 && (
+        {couponDiscount > 0 && (
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Giảm giá:</Text>
-            <Text style={styles.discountValue}>-{formatPrice(discount)}</Text>
+            <Text style={styles.summaryLabel}>Mã giảm giá:</Text>
+            <Text style={styles.discountValue}>-{formatPrice(couponDiscount)}</Text>
+          </View>
+        )}
+
+        {pointsDiscount > 0 && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Điểm tích lũy:</Text>
+            <Text style={styles.discountValue}>-{formatPrice(pointsDiscount)}</Text>
           </View>
         )}
 
@@ -252,6 +362,71 @@ const CheckoutScreen = () => {
           </LinearGradient>
         </TouchableOpacity>
       </View>
+
+      {/* Coupon Picker Modal */}
+      <Modal visible={couponModalVisible} animationType="slide" transparent onRequestClose={() => setCouponModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Mã giảm giá</Text>
+              <TouchableOpacity onPress={() => setCouponModalVisible(false)}>
+                <Ionicons name="close" size={24} color="#374151" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.modalInputRow}>
+              <TextInput
+                value={couponCode}
+                onChangeText={setCouponCode}
+                placeholder="Nhập mã giảm giá"
+                style={styles.modalInput}
+                autoCapitalize="characters"
+                placeholderTextColor="#9ca3af"
+              />
+              <TouchableOpacity
+                onPress={() => handleApplyCouponCode(couponCode)}
+                disabled={validatingCoupon || !couponCode.trim()}
+                style={[styles.modalApplyBtn, (!couponCode.trim() || validatingCoupon) && { opacity: 0.5 }]}
+              >
+                {validatingCoupon
+                  ? <ActivityIndicator color="white" size="small" />
+                  : <Text style={styles.modalApplyText}>Áp dụng</Text>
+                }
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.modalSectionLabel}>Mã của bạn</Text>
+            {loadingCoupons ? (
+              <ActivityIndicator color="#16a34a" style={{ marginVertical: 24 }} />
+            ) : myCoupons.length === 0 ? (
+              <View style={{ alignItems: 'center', paddingVertical: 32 }}>
+                <MaterialCommunityIcons name="ticket-percent-outline" size={48} color="#d1d5db" />
+                <Text style={{ color: '#9ca3af', marginTop: 8, fontSize: 14 }}>Bạn chưa có mã giảm giá nào</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={myCoupons}
+                keyExtractor={(_, i) => i.toString()}
+                style={{ maxHeight: 300 }}
+                showsVerticalScrollIndicator={false}
+                renderItem={({ item: c }) => (
+                  <TouchableOpacity style={styles.couponItem} onPress={() => handleApplyCouponCode(c.code)} activeOpacity={0.8}>
+                    <LinearGradient colors={['#16a34a', '#15803d']} style={styles.couponLeft}>
+                      <Text style={styles.couponCode}>{c.code}</Text>
+                      <Text style={styles.couponDiscount}>{getDiscountLabel(c)}</Text>
+                    </LinearGradient>
+                    <View style={styles.couponRight}>
+                      <Text style={styles.couponMin} numberOfLines={1}>
+                        {c.min_order_amount > 0 ? `Đơn tối thiểu ${formatPrice(c.min_order_amount)}` : 'Không giới hạn'}
+                      </Text>
+                      <Text style={styles.couponExpiry}>HSD: {new Date(c.expires_at).toLocaleDateString('vi-VN')}</Text>
+                      <Text style={styles.couponUse}>Dùng ngay</Text>
+                    </View>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -512,6 +687,24 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: 'white',
   },
+  // Modal styles
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalContainer: { backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 20, paddingBottom: 40 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  modalTitle: { fontSize: 18, fontWeight: '700', color: '#1f2937' },
+  modalInputRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
+  modalInput: { flex: 1, borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 11, fontSize: 14, color: '#1f2937', backgroundColor: '#f9fafb' },
+  modalApplyBtn: { backgroundColor: '#16a34a', paddingHorizontal: 18, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+  modalApplyText: { color: 'white', fontWeight: '700', fontSize: 14 },
+  modalSectionLabel: { fontSize: 14, fontWeight: '600', color: '#6b7280', marginBottom: 12 },
+  couponItem: { flexDirection: 'row', borderRadius: 12, overflow: 'hidden', marginBottom: 10, borderWidth: 1, borderColor: '#e5e7eb' },
+  couponLeft: { width: 110, padding: 12, justifyContent: 'center', alignItems: 'center' },
+  couponCode: { color: 'white', fontWeight: '800', fontSize: 13, textAlign: 'center' },
+  couponDiscount: { color: 'rgba(255,255,255,0.85)', fontSize: 11, marginTop: 4, textAlign: 'center' },
+  couponRight: { flex: 1, padding: 12, justifyContent: 'center' },
+  couponMin: { fontSize: 12, color: '#6b7280' },
+  couponExpiry: { fontSize: 11, color: '#ef4444', marginTop: 3 },
+  couponUse: { fontSize: 13, fontWeight: '700', color: '#16a34a', marginTop: 6 },
 });
 
 export default CheckoutScreen;

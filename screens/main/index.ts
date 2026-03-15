@@ -8,3 +8,6 @@ export { default as OrdersScreen } from './OrdersScreen';
 export { default as OrderDetailScreen } from './OrderDetailScreen';
 export { default as AddressListScreen } from './AddressListScreen';
 export { default as AddAddressScreen } from './AddAddressScreen';
+export { default as FavoritesScreen } from './FavoritesScreen';
+export { default as WriteReviewScreen } from './WriteReviewScreen';
+export { default as CouponsScreen } from './CouponsScreen';

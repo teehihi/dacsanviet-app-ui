@@ -1,11 +1,13 @@
 // Order types
 export type OrderStatus = 
-  | 'NEW'              // 1. Đơn hàng mới
+  | 'PENDING'          // 1. Chờ xác nhận
   | 'CONFIRMED'        // 2. Đã xác nhận
-  | 'PREPARING'        // 3. Đang chuẩn bị hàng
+  | 'PROCESSING'       // 3. Đang xử lý
   | 'SHIPPING'         // 4. Đang giao hàng
   | 'DELIVERED'        // 5. Đã giao thành công
   | 'CANCELLED'        // 6. Đã hủy
+  | 'NEW'              // legacy
+  | 'PREPARING'        // legacy
   | 'CANCEL_REQUESTED'; // Yêu cầu hủy đơn
 
 export type PaymentMethod = 'COD' | 'E_WALLET' | 'BANK_TRANSFER';
@@ -29,7 +31,8 @@ export interface ShippingAddress {
 }
 
 export interface Order {
-  id: string;
+  id: string;          // order_number
+  numericId?: number;  // orders.id (bigint) - dùng cho review
   userId: number;
   items: OrderItem[];
   totalAmount: number;

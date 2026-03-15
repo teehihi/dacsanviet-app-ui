@@ -27,7 +27,7 @@ export const BestSellersSection: React.FC<BestSellersSectionProps> = ({
   return (
     <View className="mt-6">
       <View className="px-4 mb-3 flex-row justify-between items-center">
-        <Text className="text-lg font-bold text-gray-900">🔥 Sản Phẩm HOT</Text>
+        <Text className="text-lg font-bold text-gray-900">Sản Phẩm HOT</Text>
         <TouchableOpacity className="flex-row items-center">
           <MaterialCommunityIcons name="chevron-right" size={24} color="#16a34a" />
         </TouchableOpacity>
@@ -72,7 +72,7 @@ export const BestSellersSection: React.FC<BestSellersSectionProps> = ({
               </View>
               {/* Sold Count Badge */}
               <View className="absolute top-2 right-2 bg-orange-500 rounded-full px-2 py-1">
-                <Text className="text-white text-xs font-bold">{product.soldCount || 0} đã bán</Text>
+                <Text className="text-white text-xs font-bold">{`${product.soldCount || 0} đã bán`}</Text>
               </View>
             </View>
             <View className="p-3 flex-1 justify-between">
