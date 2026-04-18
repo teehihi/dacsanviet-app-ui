@@ -1,7 +1,8 @@
 import React from 'react';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createMaterialTopTabNavigator } from '@react-navigation/material-top-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { 
   HomepageScreen, 
   SearchScreen, 
@@ -24,9 +25,9 @@ import WriteReviewScreen from '../screens/main/WriteReviewScreen';
 import CouponsScreen from '../screens/main/CouponsScreen';
 import NotificationScreen from '../screens/main/NotificationScreen';
 import SpendingStatsScreen from '../screens/main/SpendingStatsScreen';
-import { CustomTabBar } from '../components/CustomTabBar';
+import { SimplePillTabBar } from '../components/navigation/SimplePillTabBar';
 
-const Tab = createBottomTabNavigator();
+const Tab = createMaterialTopTabNavigator();
 const ProfileStack = createStackNavigator();
 const MainStack = createStackNavigator();
 
@@ -55,18 +56,6 @@ const SearchStackNavigator = () => {
       <MainStack.Screen name="Category" component={CategoryScreen} />
       <MainStack.Screen name="ProductDetail" component={ProductDetailScreen} />
       <MainStack.Screen name="Cart" component={CartScreen} />
-      <MainStack.Screen name="Checkout" component={CheckoutScreen} />
-      <MainStack.Screen name="AddressList" component={AddressListScreen} />
-      <MainStack.Screen name="AddAddress" component={AddAddressScreen} />
-    </MainStack.Navigator>
-  );
-};
-
-// Cart Stack Navigator (Cart -> Checkout -> AddressList -> AddAddress)
-const CartStackNavigator = () => {
-  return (
-    <MainStack.Navigator screenOptions={{ headerShown: false }}>
-      <MainStack.Screen name="CartMain" component={CartScreen} />
       <MainStack.Screen name="Checkout" component={CheckoutScreen} />
       <MainStack.Screen name="AddressList" component={AddressListScreen} />
       <MainStack.Screen name="AddAddress" component={AddAddressScreen} />
@@ -104,37 +93,33 @@ const ProfileStackNavigator = () => {
 
 export const MainTabNavigator = () => {
   return (
-    <Tab.Navigator
-      tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Tab.Screen 
-        name="Home" 
-        component={MainStackNavigator}
-      />
-      <Tab.Screen 
-        name="Search" 
-        component={SearchStackNavigator}
-      />
-      <Tab.Screen 
-        name="Orders" 
-        component={OrdersStackNavigator}
-        options={({ route }) => ({
-          tabBarStyle: ((route) => {
-            const routeName = getFocusedRouteNameFromRoute(route) ?? '';
-            if (['OrderDetail'].includes(routeName)) {
-              return { display: 'none' };
-            }
-            return { display: 'flex' };
-          })(route),
-        })}
-      />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileStackNavigator}
-      />
-    </Tab.Navigator>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Tab.Navigator
+        tabBarPosition="bottom"
+        tabBar={(props) => <SimplePillTabBar {...props} />}
+        screenOptions={{
+          headerShown: false,
+          swipeEnabled: true,
+          animationEnabled: true,
+        }}
+      >
+        <Tab.Screen 
+          name="Home" 
+          component={MainStackNavigator}
+        />
+        <Tab.Screen 
+          name="Search" 
+          component={SearchStackNavigator}
+        />
+        <Tab.Screen 
+          name="Orders" 
+          component={OrdersStackNavigator}
+        />
+        <Tab.Screen 
+          name="Profile" 
+          component={ProfileStackNavigator}
+        />
+      </Tab.Navigator>
+    </GestureHandlerRootView>
   );
 };
