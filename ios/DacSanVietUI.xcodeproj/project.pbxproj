@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		12776E00C060D97439305021 /* libPods-DacSanVietUI.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 550AB0EAADC0F2D19E578757 /* libPods-DacSanVietUI.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		16E89D263314193A7A0BBF9B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 7A27FAD8918D4968C9C470F1 /* PrivacyInfo.xcprivacy */; };
+		22C6872EC6F61881226DDE82 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AB2F27244058134B0CF4254 /* ExpoModulesProvider.swift */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		80866450BE2C30EA4E16CA11 /* libPods-DacSanVietUI.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 45B939DE140DF7968BC3E11E /* libPods-DacSanVietUI.a */; };
-		B85788D40C79BA3836FA3981 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AC56F07AFF62253B1468918D /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		EA40BBC7C2EB735642B93AF1 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1BE05BD70C5B8B637AEE10A /* ExpoModulesProvider.swift */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
@@ -20,16 +20,16 @@
 		13B07F961A680F5B00A75B9A /* DacSanVietUI.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DacSanVietUI.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = DacSanVietUI/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = DacSanVietUI/Info.plist; sourceTree = "<group>"; };
-		45B939DE140DF7968BC3E11E /* libPods-DacSanVietUI.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DacSanVietUI.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		550AB0EAADC0F2D19E578757 /* libPods-DacSanVietUI.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-DacSanVietUI.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7A27FAD8918D4968C9C470F1 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xml; name = PrivacyInfo.xcprivacy; path = DacSanVietUI/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		7AB2F27244058134B0CF4254 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-DacSanVietUI/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = DacSanVietUI/SplashScreen.storyboard; sourceTree = "<group>"; };
-		AC56F07AFF62253B1468918D /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = DacSanVietUI/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
-		D62106017C2AC1E86D404D9E /* Pods-DacSanVietUI.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DacSanVietUI.debug.xcconfig"; path = "Target Support Files/Pods-DacSanVietUI/Pods-DacSanVietUI.debug.xcconfig"; sourceTree = "<group>"; };
+		BE05C7FEA25701D71413A62B /* Pods-DacSanVietUI.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DacSanVietUI.debug.xcconfig"; path = "Target Support Files/Pods-DacSanVietUI/Pods-DacSanVietUI.debug.xcconfig"; sourceTree = "<group>"; };
+		D10F1CA00B10A75F547D144D /* Pods-DacSanVietUI.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DacSanVietUI.release.xcconfig"; path = "Target Support Files/Pods-DacSanVietUI/Pods-DacSanVietUI.release.xcconfig"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = DacSanVietUI/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* DacSanVietUI-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "DacSanVietUI-Bridging-Header.h"; path = "DacSanVietUI/DacSanVietUI-Bridging-Header.h"; sourceTree = "<group>"; };
-		F1BE05BD70C5B8B637AEE10A /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-DacSanVietUI/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
-		F888479C64C4962EC4BFC400 /* Pods-DacSanVietUI.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-DacSanVietUI.release.xcconfig"; path = "Target Support Files/Pods-DacSanVietUI/Pods-DacSanVietUI.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,23 +37,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				80866450BE2C30EA4E16CA11 /* libPods-DacSanVietUI.a in Frameworks */,
+				12776E00C060D97439305021 /* libPods-DacSanVietUI.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0820657ECD827BE4939D17AB /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				D62106017C2AC1E86D404D9E /* Pods-DacSanVietUI.debug.xcconfig */,
-				F888479C64C4962EC4BFC400 /* Pods-DacSanVietUI.release.xcconfig */,
-			);
-			name = Pods;
-			path = Pods;
-			sourceTree = "<group>";
-		};
 		13B07FAE1A68108700A75B9A /* DacSanVietUI */ = {
 			isa = PBXGroup;
 			children = (
@@ -63,7 +53,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				AC56F07AFF62253B1468918D /* PrivacyInfo.xcprivacy */,
+				7A27FAD8918D4968C9C470F1 /* PrivacyInfo.xcprivacy */,
 			);
 			name = DacSanVietUI;
 			sourceTree = "<group>";
@@ -72,9 +62,17 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				45B939DE140DF7968BC3E11E /* libPods-DacSanVietUI.a */,
+				550AB0EAADC0F2D19E578757 /* libPods-DacSanVietUI.a */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		7257CB69DCBC008472209883 /* DacSanVietUI */ = {
+			isa = PBXGroup;
+			children = (
+				7AB2F27244058134B0CF4254 /* ExpoModulesProvider.swift */,
+			);
+			name = DacSanVietUI;
 			sourceTree = "<group>";
 		};
 		832341AE1AAA6A7D00B99B32 /* Libraries */ = {
@@ -91,8 +89,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				0820657ECD827BE4939D17AB /* Pods */,
-				FE21BC949F22D64366BEB04B /* ExpoModulesProviders */,
+				D74191B30825CC6562499357 /* Pods */,
+				BE6CB6DAC2C7C7C87F12CD5C /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -107,14 +105,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		8C07EDC7819A3490F133E48D /* DacSanVietUI */ = {
-			isa = PBXGroup;
-			children = (
-				F1BE05BD70C5B8B637AEE10A /* ExpoModulesProvider.swift */,
-			);
-			name = DacSanVietUI;
-			sourceTree = "<group>";
-		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -124,12 +114,21 @@
 			path = DacSanVietUI/Supporting;
 			sourceTree = "<group>";
 		};
-		FE21BC949F22D64366BEB04B /* ExpoModulesProviders */ = {
+		BE6CB6DAC2C7C7C87F12CD5C /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				8C07EDC7819A3490F133E48D /* DacSanVietUI */,
+				7257CB69DCBC008472209883 /* DacSanVietUI */,
 			);
 			name = ExpoModulesProviders;
+			sourceTree = "<group>";
+		};
+		D74191B30825CC6562499357 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				BE05C7FEA25701D71413A62B /* Pods-DacSanVietUI.debug.xcconfig */,
+				D10F1CA00B10A75F547D144D /* Pods-DacSanVietUI.release.xcconfig */,
+			);
+			path = Pods;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -140,14 +139,14 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "DacSanVietUI" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				B0C0EEF4AA98C005EAC8D34A /* [Expo] Configure project */,
+				3F5C52431F9D2C166918F381 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				676B7E0B391D45578DCB526A /* [Expo Dev Launcher] Strip Local Network Keys for Release */,
-				2943243695EC561055B95759 /* [CP] Embed Pods Frameworks */,
+				AF9AEE6080C5413E82CC506E /* [Expo Dev Launcher] Strip Local Network Keys for Release */,
+				0A71C945399F349D69F97427 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -197,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				B85788D40C79BA3836FA3981 /* PrivacyInfo.xcprivacy in Resources */,
+				16E89D263314193A7A0BBF9B /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -243,7 +242,7 @@
 			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
 			showEnvVarsInLog = 0;
 		};
-		2943243695EC561055B95759 /* [CP] Embed Pods Frameworks */ = {
+		0A71C945399F349D69F97427 /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -265,19 +264,29 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DacSanVietUI/Pods-DacSanVietUI-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		676B7E0B391D45578DCB526A /* [Expo Dev Launcher] Strip Local Network Keys for Release */ = {
+		3F5C52431F9D2C166918F381 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputPaths = (
+			inputFileListPaths = (
 			);
-			name = "[Expo Dev Launcher] Strip Local Network Keys for Release";
+			inputPaths = (
+				"$(SRCROOT)/.xcode.env",
+				"$(SRCROOT)/.xcode.env.local",
+				"$(SRCROOT)/DacSanVietUI/DacSanVietUI.entitlements",
+				"$(SRCROOT)/Pods/Target Support Files/Pods-DacSanVietUI/expo-configure-project.sh",
+			);
+			name = "[Expo] Configure project";
+			outputFileListPaths = (
+			);
 			outputPaths = (
+				"$(SRCROOT)/Pods/Target Support Files/Pods-DacSanVietUI/ExpoModulesProvider.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Strip dev-launcher-specific local network permission keys from non-Debug builds\n# This only removes _expo._tcp Bonjour services and the dev-launcher usage description.\n# Other Bonjour services and custom descriptions are preserved for production use.\n\nif [ \"$CONFIGURATION\" != \"Debug\" ]; then\n  PLIST_PATH=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n  if [ -f \"$PLIST_PATH\" ]; then\n    # Check if NSBonjourServices exists\n    if /usr/libexec/PlistBuddy -c \"Print :NSBonjourServices\" \"$PLIST_PATH\" >/dev/null 2>&1; then\n      # Get the count of services\n      COUNT=$(/usr/libexec/PlistBuddy -c \"Print :NSBonjourServices\" \"$PLIST_PATH\" 2>/dev/null | grep \"^    \" | wc -l | tr -d ' ')\n\n      # Remove _expo._tcp\n      for ((i=COUNT-1; i>=0; i--)); do\n        SERVICE=$(/usr/libexec/PlistBuddy -c \"Print :NSBonjourServices:$i\" \"$PLIST_PATH\" 2>/dev/null || echo \"\")\n        if echo \"$SERVICE\" | grep -q \"_expo._tcp\"; then\n          /usr/libexec/PlistBuddy -c \"Delete :NSBonjourServices:$i\" \"$PLIST_PATH\" 2>/dev/null || true\n        fi\n      done\n\n      # If the array is now empty, remove it entirely\n      REMAINING=$(/usr/libexec/PlistBuddy -c \"Print :NSBonjourServices\" \"$PLIST_PATH\" 2>/dev/null | grep \"^    \" | wc -l | tr -d ' ')\n      if [ \"$REMAINING\" -eq \"0\" ]; then\n        /usr/libexec/PlistBuddy -c \"Delete :NSBonjourServices\" \"$PLIST_PATH\" 2>/dev/null || true\n      fi\n    fi\n\n    # Only delete the description if it matches the dev-launcher default text\n    DESC=$(/usr/libexec/PlistBuddy -c \"Print :NSLocalNetworkUsageDescription\" \"$PLIST_PATH\" 2>/dev/null || echo \"\")\n    if echo \"$DESC\" | grep -q \"Expo Dev Launcher\"; then\n      /usr/libexec/PlistBuddy -c \"Delete :NSLocalNetworkUsageDescription\" \"$PLIST_PATH\" 2>/dev/null || true\n    fi\n  fi\nfi\n";
+			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-DacSanVietUI/expo-configure-project.sh\"\n";
 		};
 		800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -319,29 +328,19 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-DacSanVietUI/Pods-DacSanVietUI-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		B0C0EEF4AA98C005EAC8D34A /* [Expo] Configure project */ = {
+		AF9AEE6080C5413E82CC506E /* [Expo Dev Launcher] Strip Local Network Keys for Release */ = {
 			isa = PBXShellScriptBuildPhase;
-			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
-				"$(SRCROOT)/.xcode.env",
-				"$(SRCROOT)/.xcode.env.local",
-				"$(SRCROOT)/DacSanVietUI/DacSanVietUI.entitlements",
-				"$(SRCROOT)/Pods/Target Support Files/Pods-DacSanVietUI/expo-configure-project.sh",
 			);
-			name = "[Expo] Configure project";
-			outputFileListPaths = (
-			);
+			name = "[Expo Dev Launcher] Strip Local Network Keys for Release";
 			outputPaths = (
-				"$(SRCROOT)/Pods/Target Support Files/Pods-DacSanVietUI/ExpoModulesProvider.swift",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# This script configures Expo modules and generates the modules provider file.\nbash -l -c \"./Pods/Target\\ Support\\ Files/Pods-DacSanVietUI/expo-configure-project.sh\"\n";
+			shellScript = "# Strip dev-launcher-specific local network permission keys from non-Debug builds\n# This only removes _expo._tcp Bonjour services and the dev-launcher usage description.\n# Other Bonjour services and custom descriptions are preserved for production use.\n\nif [ \"$CONFIGURATION\" != \"Debug\" ]; then\n  PLIST_PATH=\"${TARGET_BUILD_DIR}/${INFOPLIST_PATH}\"\n  if [ -f \"$PLIST_PATH\" ]; then\n    # Check if NSBonjourServices exists\n    if /usr/libexec/PlistBuddy -c \"Print :NSBonjourServices\" \"$PLIST_PATH\" >/dev/null 2>&1; then\n      # Get the count of services\n      COUNT=$(/usr/libexec/PlistBuddy -c \"Print :NSBonjourServices\" \"$PLIST_PATH\" 2>/dev/null | grep \"^    \" | wc -l | tr -d ' ')\n\n      # Remove _expo._tcp\n      for ((i=COUNT-1; i>=0; i--)); do\n        SERVICE=$(/usr/libexec/PlistBuddy -c \"Print :NSBonjourServices:$i\" \"$PLIST_PATH\" 2>/dev/null || echo \"\")\n        if echo \"$SERVICE\" | grep -q \"_expo._tcp\"; then\n          /usr/libexec/PlistBuddy -c \"Delete :NSBonjourServices:$i\" \"$PLIST_PATH\" 2>/dev/null || true\n        fi\n      done\n\n      # If the array is now empty, remove it entirely\n      REMAINING=$(/usr/libexec/PlistBuddy -c \"Print :NSBonjourServices\" \"$PLIST_PATH\" 2>/dev/null | grep \"^    \" | wc -l | tr -d ' ')\n      if [ \"$REMAINING\" -eq \"0\" ]; then\n        /usr/libexec/PlistBuddy -c \"Delete :NSBonjourServices\" \"$PLIST_PATH\" 2>/dev/null || true\n      fi\n    fi\n\n    # Only delete the description if it matches the dev-launcher default text\n    DESC=$(/usr/libexec/PlistBuddy -c \"Print :NSLocalNetworkUsageDescription\" \"$PLIST_PATH\" 2>/dev/null || echo \"\")\n    if echo \"$DESC\" | grep -q \"Expo Dev Launcher\"; then\n      /usr/libexec/PlistBuddy -c \"Delete :NSLocalNetworkUsageDescription\" \"$PLIST_PATH\" 2>/dev/null || true\n    fi\n  fi\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -351,7 +350,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				EA40BBC7C2EB735642B93AF1 /* ExpoModulesProvider.swift in Sources */,
+				22C6872EC6F61881226DDE82 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -360,12 +359,13 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = D62106017C2AC1E86D404D9E /* Pods-DacSanVietUI.debug.xcconfig */;
+			baseConfigurationReference = BE05C7FEA25701D71413A62B /* Pods-DacSanVietUI.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = DacSanVietUI/DacSanVietUI.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5MZ6QHHJH5;
 				ENABLE_BITCODE = NO;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
@@ -396,12 +396,13 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = F888479C64C4962EC4BFC400 /* Pods-DacSanVietUI.release.xcconfig */;
+			baseConfigurationReference = D10F1CA00B10A75F547D144D /* Pods-DacSanVietUI.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = DacSanVietUI/DacSanVietUI.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 5MZ6QHHJH5;
 				INFOPLIST_FILE = DacSanVietUI/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
