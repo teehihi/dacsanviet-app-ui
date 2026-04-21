@@ -217,7 +217,7 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
             <MenuItem
               icon="gift"
               title="DacSanVietXu"
-              badge={`${pointsBalance.toLocaleString('vi-VN')} Xu`}
+              badge={`${(pointsBalance || 0).toLocaleString('vi-VN')} Xu`}
               onPress={() => navigation.navigate('Coupons', { initialTab: 'points' } as never)}
             />
             <MenuItem

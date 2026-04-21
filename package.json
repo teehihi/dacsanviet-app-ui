@@ -1,5 +1,5 @@
 {
-  "name": "baitaptuan1_typescript",
+  "name": "dac-san-viet-ui",
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
@@ -23,6 +23,7 @@
     "setup": "cp .env.example .env && npm run auto-ip"
   },
   "dependencies": {
+    "@callstack/liquid-glass": "^0.7.1",
     "@expo/ui": "~55.0.11",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -37,6 +38,7 @@
     "d3-shape": "^3.2.0",
     "expo": "^55.0.15",
     "expo-blur": "^55.0.14",
+    "expo-build-properties": "^55.0.13",
     "expo-dev-client": "~55.0.27",
     "expo-glass-effect": "~55.0.10",
     "expo-haptics": "^55.0.14",

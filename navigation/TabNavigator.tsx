@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { DocsGlassTabBar } from '../components/navigation/DocsGlassTabBar';
+import { GlassTabBar } from '../components/GlassTabBar';
 import { HomeScreen } from '../screens/HomeScreen';
 import { SearchScreen } from '../screens/SearchScreen';
 import { AddScreen } from '../screens/AddScreen';
@@ -12,7 +12,7 @@ const Tab = createBottomTabNavigator();
 export const TabNavigator: React.FC = () => {
   return (
     <Tab.Navigator
-      tabBar={(props) => <DocsGlassTabBar {...props} />}
+      tabBar={(props) => <GlassTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >
       <Tab.Screen name="Home" component={HomeScreen} />

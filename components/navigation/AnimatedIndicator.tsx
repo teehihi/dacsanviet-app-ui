@@ -1,41 +1,36 @@
-import React from 'react';
-import { StyleSheet } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import React, { useEffect, useRef } from 'react';
+import { StyleSheet, Animated } from 'react-native';
 
 interface AnimatedIndicatorProps {
-  translateX: Animated.SharedValue<number>;
+  translateX: { value: number };
   width: number;
 }
 
 /**
  * AnimatedIndicator - Sliding pill indicator that moves under active tab
- * Uses shared value for smooth horizontal translation with spring animation
+ * Uses React Native Animated API for smooth horizontal translation
  */
 export const AnimatedIndicator: React.FC<AnimatedIndicatorProps> = ({ translateX, width }) => {
-  // Animated style that responds to translateX shared value changes
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        {
-          // Smooth spring animation when indicator moves between tabs
-          translateX: withSpring(translateX.value, {
-            damping: 15,
-            stiffness: 150,
-            mass: 0.5,
-          }),
-        },
-      ],
-    };
-  });
+  const animatedValue = useRef(new Animated.Value(translateX.value)).current;
+
+  useEffect(() => {
+    Animated.spring(animatedValue, {
+      toValue: translateX.value,
+      damping: 15,
+      stiffness: 150,
+      mass: 0.5,
+      useNativeDriver: true,
+    }).start();
+  }, [translateX.value, animatedValue]);
 
   return (
     <Animated.View
       style={[
         styles.indicator,
         {
-          width: width * 0.6, // Indicator is 60% of tab width
+          width: `${width * 0.6}%`,
+          transform: [{ translateX: animatedValue }],
         },
-        animatedStyle,
       ]}
     />
   );

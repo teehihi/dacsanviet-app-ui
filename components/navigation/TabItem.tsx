@@ -1,6 +1,5 @@
-import React from 'react';
-import { TouchableOpacity, StyleSheet } from 'react-native';
-import Animated, { useAnimatedStyle, withSpring, useSharedValue, withTiming } from 'react-native-reanimated';
+import React, { useEffect, useRef } from 'react';
+import { TouchableOpacity, StyleSheet, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 interface TabItemProps {
@@ -13,8 +12,7 @@ interface TabItemProps {
 
 /**
  * TabItem - Individual tab button with scale animation
- * Active tab scales up with spring animation
- * Includes bounce effect on press
+ * Uses React Native Animated API for smooth scaling
  */
 export const TabItem: React.FC<TabItemProps> = ({
   icon,
@@ -23,59 +21,63 @@ export const TabItem: React.FC<TabItemProps> = ({
   onLongPress,
   label,
 }) => {
-  // Shared value for scale animation
-  const scale = useSharedValue(1);
+  const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0.5)).current;
 
-  // Animate scale based on focus state
-  React.useEffect(() => {
-    scale.value = withSpring(isFocused ? 1.2 : 1, {
-      damping: 12,
-      stiffness: 200,
-    });
-  }, [isFocused]);
-
-  // Animated style for icon scaling
-  const animatedIconStyle = useAnimatedStyle(() => {
-    return {
-      transform: [{ scale: scale.value }],
-    };
-  });
-
-  // Color animation for active/inactive states
-  const animatedColorStyle = useAnimatedStyle(() => {
-    return {
-      opacity: withTiming(isFocused ? 1 : 0.5, { duration: 200 }),
-    };
-  });
+  // Animate scale and opacity based on focus state
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(scale, {
+        toValue: isFocused ? 1.2 : 1,
+        damping: 12,
+        stiffness: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: isFocused ? 1 : 0.5,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [isFocused, scale, opacity]);
 
   // Handle press with bounce effect
   const handlePressIn = () => {
-    scale.value = withSpring(isFocused ? 1.1 : 0.9, {
+    Animated.spring(scale, {
+      toValue: isFocused ? 1.1 : 0.9,
       damping: 10,
       stiffness: 300,
-    });
+      useNativeDriver: true,
+    }).start();
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(isFocused ? 1.2 : 1, {
+    Animated.spring(scale, {
+      toValue: isFocused ? 1.2 : 1,
       damping: 12,
       stiffness: 200,
-    });
+      useNativeDriver: true,
+    }).start();
   };
 
   return (
     <TouchableOpacity
-      accessibilityRole="button"
-      accessibilityState={isFocused ? { selected: true } : {}}
-      accessibilityLabel={label}
       onPress={onPress}
       onLongPress={onLongPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      style={styles.tabButton}
+      style={styles.container}
       activeOpacity={0.7}
     >
-      <Animated.View style={[animatedIconStyle, animatedColorStyle]}>
+      <Animated.View
+        style={[
+          styles.iconContainer,
+          {
+            transform: [{ scale }],
+            opacity,
+          },
+        ]}
+      >
         <Ionicons
           name={icon}
           size={24}
@@ -87,10 +89,14 @@ export const TabItem: React.FC<TabItemProps> = ({
 };
 
 const styles = StyleSheet.create({
-  tabButton: {
+  container: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
+    justifyContent: 'center',
+    paddingVertical: 8,
+  },
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

@@ -24,6 +24,12 @@ web-build/
 *.key
 *.mobileprovision
 
+# iOS
+ios/Pods/
+ios/build/
+ios/*.xcworkspace
+!ios/*.xcodeproj
+
 # Metro
 .metro-health-check*
 

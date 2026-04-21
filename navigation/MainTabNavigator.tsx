@@ -25,11 +25,11 @@ import WriteReviewScreen from '../screens/main/WriteReviewScreen';
 import CouponsScreen from '../screens/main/CouponsScreen';
 import NotificationScreen from '../screens/main/NotificationScreen';
 import SpendingStatsScreen from '../screens/main/SpendingStatsScreen';
-import { SimplePillTabBar } from '../components/navigation/SimplePillTabBar';
+import { GlassTabBar } from '../components/GlassTabBar';
 
 const Tab = createMaterialTopTabNavigator();
-const ProfileStack = createStackNavigator();
-const MainStack = createStackNavigator();
+const ProfileStack = createStackNavigator<any>();
+const MainStack = createStackNavigator<any>();
 
 // Main Stack Navigator (Homepage -> Category -> ProductDetail -> Cart -> Checkout)
 const MainStackNavigator = () => {
@@ -96,9 +96,8 @@ export const MainTabNavigator = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Tab.Navigator
         tabBarPosition="bottom"
-        tabBar={(props) => <SimplePillTabBar {...props} />}
+        tabBar={(props) => <GlassTabBar {...props as any} />}
         screenOptions={{
-          headerShown: false,
           swipeEnabled: true,
           animationEnabled: true,
         }}

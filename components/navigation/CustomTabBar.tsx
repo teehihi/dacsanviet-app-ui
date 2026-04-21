@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, Platform, useColorScheme } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { useSharedValue } from 'react-native-reanimated';
 import { TabItem } from './TabItem';
 import { AnimatedIndicator } from './AnimatedIndicator';
 import { Ionicons } from '@expo/vector-icons';
@@ -11,15 +10,14 @@ import * as Haptics from 'expo-haptics';
 const TAB_CONFIG: Record<string, keyof typeof Ionicons.glyphMap> = {
   Home: 'home',
   Search: 'search',
-  Add: 'add-circle',
-  Notifications: 'notifications',
+  Orders: 'clipboard',
   Profile: 'person',
 };
 
 /**
  * CustomTabBar - Floating bottom navigation with animations
  * Features:
- * - Pill-shaped floating design with shadow
+ * - Compact floating design with subtle shadow
  * - Sliding indicator under active tab
  * - Scale animations on tab press
  * - Haptic feedback (iOS)
@@ -32,12 +30,12 @@ export const CustomTabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, 
   // Calculate tab width for indicator positioning
   const tabWidth = 100 / state.routes.length;
   
-  // Shared value for indicator position (percentage)
-  const translateX = useSharedValue(0);
+  // State for indicator position (percentage)
+  const [translateX, setTranslateX] = useState({ value: state.index * tabWidth });
 
   // Update indicator position when active tab changes
   useEffect(() => {
-    translateX.value = state.index * tabWidth;
+    setTranslateX({ value: state.index * tabWidth });
   }, [state.index, tabWidth]);
 
   return (
@@ -114,24 +112,23 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    paddingHorizontal: 20,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 20,
+    paddingHorizontal: 16,
+    paddingBottom: Platform.OS === 'ios' ? 20 : 12,
   },
   tabBar: {
     flexDirection: 'row',
-    borderRadius: 30,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    // Shadow for iOS
+    borderRadius: 25,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    // Shadow nhẹ, chỉ đổ lên trên
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 4,
+      height: -2,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    // Shadow for Android
-    elevation: 8,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
   tabBarLight: {
     backgroundColor: '#FFFFFF',
