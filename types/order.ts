@@ -33,6 +33,8 @@ export interface ShippingAddress {
 export interface Order {
   id: string;          // order_number
   numericId?: number;  // orders.id (bigint) - dùng cho review
+  order_number?: string;
+  code?: string;
   userId: number;
   items: OrderItem[];
   totalAmount: number;

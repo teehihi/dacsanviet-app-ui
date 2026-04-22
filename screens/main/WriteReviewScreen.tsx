@@ -31,11 +31,21 @@ const WriteReviewScreen = () => {
       if (res.success && res.data) {
         Alert.alert(
           '🎉 Đánh giá thành công!',
-          `Bạn nhận được:\n• ${res.data.reward.points} điểm tích lũy\n• Mã giảm giá: ${res.data.reward.couponCode}`,
+          `Bạn nhận được:\n• ${res.data.reward?.points || 500} điểm tích lũy\n• Mã giảm giá: ${res.data.reward?.couponCode || 'Đã gửi qua thông báo'}`,
           [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
       } else {
-        Alert.alert('Lỗi', res.message || 'Không thể gửi đánh giá');
+        const isDuplicate = res.message && res.message.includes('Bạn đã đánh giá');
+        Alert.alert('Lỗi', res.message || 'Không thể gửi đánh giá', [
+          {
+            text: 'OK',
+            onPress: () => {
+              if (isDuplicate) {
+                navigation.goBack();
+              }
+            }
+          }
+        ]);
       }
     } catch {
       Alert.alert('Lỗi', 'Không thể gửi đánh giá');

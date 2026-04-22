@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,18 +14,21 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { ApiService, getProductImage } from '../../services/api';
 import { Order, OrderStatus } from '../../types/order';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 
 const OrderDetailScreen = () => {
   const route = useRoute();
   const navigation = useNavigation();
   const { orderId } = route.params as { orderId: string };
   const [order, setOrder] = useState<Order | null>(null);
+  const [reviewStatus, setReviewStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadOrder();
-  }, [orderId]);
+  useFocusEffect(
+    useCallback(() => {
+      loadOrder();
+    }, [orderId])
+  );
 
   const loadOrder = async () => {
     try {
@@ -34,6 +37,7 @@ const OrderDetailScreen = () => {
       
       if (response.success && response.data) {
         setOrder(response.data.order);
+        setReviewStatus(response.data.reviewStatus || null);
       } else {
         Alert.alert('Lỗi', 'Không tìm thấy đơn hàng');
         navigation.goBack();
@@ -107,7 +111,7 @@ const OrderDetailScreen = () => {
 
     Alert.alert(
       'Hủy đơn hàng',
-      `Bạn có chắc muốn hủy đơn hàng ${order.id}?`,
+      `Bạn có chắc muốn hủy đơn hàng ${order.order_number || order.code || order.id}?`,
       [
         { text: 'Không', style: 'cancel' },
         {
@@ -312,26 +316,35 @@ const OrderDetailScreen = () => {
         )}
 
         {/* Review Button - only for DELIVERED orders */}
-        {order.status === 'DELIVERED' && (
+        {order.status === 'DELIVERED' && reviewStatus && reviewStatus.canReview && (
           <View className="px-4 pb-4">
-            <TouchableOpacity
-              className="py-4 rounded-xl items-center"
-              style={{ backgroundColor: '#16a34a' }}
-              onPress={() => {
-                if (order.items.length > 0) {
-                  const item = order.items[0];
-                  (navigation as any).navigate('WriteReview', {
-                    orderId: order.numericId || order.id,
-                    productId: item.productId,
-                    productName: item.productName,
-                    productImage: item.productImage,
-                    category: item.category || '',
-                  });
-                }
-              }}
-            >
-              <Text className="text-white font-bold text-lg">⭐ Đánh giá sản phẩm</Text>
-            </TouchableOpacity>
+            {reviewStatus.allReviewed ? (
+              <View
+                className="py-4 rounded-xl items-center"
+                style={{ backgroundColor: '#e5e7eb' }}
+              >
+                <Text className="text-gray-500 font-bold text-lg">Đã đánh giá sản phẩm</Text>
+              </View>
+            ) : (
+              <TouchableOpacity
+                className="py-4 rounded-xl items-center"
+                style={{ backgroundColor: '#16a34a' }}
+                onPress={() => {
+                  if (order.items.length > 0) {
+                    const item = order.items[0];
+                    (navigation as any).navigate('WriteReview', {
+                      orderId: order.numericId || order.id,
+                      productId: item.productId,
+                      productName: item.productName,
+                      productImage: item.productImage,
+                      category: item.category || '',
+                    });
+                  }
+                }}
+              >
+                <Text className="text-white font-bold text-lg">Đánh giá sản phẩm</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
 

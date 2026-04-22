@@ -78,7 +78,7 @@ const OrdersScreen = () => {
   const handleCancelOrder = async (order: Order) => {
     Alert.alert(
       'Hủy đơn hàng',
-      `Bạn có chắc muốn hủy đơn hàng ${order.id}?`,
+      `Bạn có chắc muốn hủy đơn hàng ${order.order_number || order.code || order.id}?`,
       [
         { text: 'Không', style: 'cancel' },
         {
@@ -175,7 +175,7 @@ const OrdersScreen = () => {
                 {/* Header */}
                 <View className="flex-row justify-between items-center mb-3 pb-3 border-b border-gray-200">
                   <View>
-                    <Text className="font-bold text-gray-800">Mã đơn: {order.id}</Text>
+                    <Text className="font-bold text-gray-800">Mã đơn: {order.order_number || order.code || order.id}</Text>
                     <Text className="text-sm text-gray-500 mt-1">
                       {formatDate(order.createdAt)}
                     </Text>
