@@ -6,7 +6,7 @@ function getLocalIP() {
   try {
     const os = require('os');
     const platform = os.platform();
-    
+
     if (platform === 'win32') {
       // Windows: sử dụng ipconfig
       const output = execSync('ipconfig | findstr /i "IPv4"', { encoding: 'utf8' });
@@ -18,11 +18,11 @@ function getLocalIP() {
       // macOS/Linux: sử dụng ifconfig
       const output = execSync('ifconfig | grep "inet " | grep -v 127.0.0.1', { encoding: 'utf8' });
       const match = output.match(/inet (\d+\.\d+\.\d+\.\d+)/);
-      
+
       if (match) {
         return match[1];
       }
-      
+
       // Fallback: thử với ip route (Linux)
       try {
         const routeOutput = execSync('ip route get 1.1.1.1 | grep -oP "src \\K\\S+"', { encoding: 'utf8' });
@@ -47,9 +47,9 @@ function getLocalIP() {
 function updateEnvFile() {
   const envPath = path.join(__dirname, '../.env');
   const currentIP = getLocalIP();
-  
+
   console.log('🔍 Detected IP:', currentIP);
-  
+
   if (!fs.existsSync(envPath)) {
     console.log('📝 Creating .env file...');
     const envContent = `# API Configuration - Auto-generated
@@ -65,13 +65,13 @@ DEBUG_API=true
   } else {
     // Đọc file .env hiện tại
     let envContent = fs.readFileSync(envPath, 'utf8');
-    
+
     // Cập nhật API_HOST_REAL_DEVICE
     const updatedContent = envContent.replace(
       /API_HOST_REAL_DEVICE=.*/,
       `API_HOST_REAL_DEVICE=${currentIP}`
     );
-    
+
     // Kiểm tra xem có thay đổi không
     if (updatedContent !== envContent) {
       fs.writeFileSync(envPath, updatedContent);

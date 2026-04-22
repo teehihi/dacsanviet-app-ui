@@ -31,12 +31,20 @@ import {
 
 // API Configuration từ environment variables
 const getApiHost = () => {
+  // Ưu tiên sử dụng IP thiết bị thật nếu có cấu hình (dành cho cả Android và iOS)
+  if (API_HOST_REAL_DEVICE && 
+      API_HOST_REAL_DEVICE !== 'localhost' && 
+      API_HOST_REAL_DEVICE !== '127.0.0.1' && 
+      API_HOST_REAL_DEVICE !== '10.0.2.2') {
+    return API_HOST_REAL_DEVICE;
+  }
+
   if (Platform.OS === 'android') {
     return API_HOST_ANDROID_EMULATOR || '10.0.2.2';
   }
   
-  // Cho iOS: ưu tiên real device, fallback về simulator
-  return API_HOST_REAL_DEVICE || API_HOST_IOS_SIMULATOR || API_HOST_LOCAL || 'localhost';
+  // Cho iOS/Web: fallback về simulator hoặc localhost
+  return API_HOST_IOS_SIMULATOR || API_HOST_LOCAL || 'localhost';
 };
 
 const API_HOST = getApiHost();
@@ -1041,7 +1049,7 @@ export class ApiService {
       const response = await apiClient.get(`/favorites/${productId}/status`);
       return response.data;
     } catch (error: any) {
-      return { success: true, data: { isLiked: false } };
+      return { success: false, message: 'Không thể kiểm tra trạng thái yêu thích.', data: { isLiked: false } };
     }
   }
 

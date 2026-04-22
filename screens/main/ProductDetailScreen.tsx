@@ -194,15 +194,23 @@ const ProductDetailScreen: React.FC<Props> = ({ navigation, route }) => {
           {/* Stats row */}
           <View style={styles.statsRow}>
             <View style={styles.ratingStars}>
-              {[1,2,3,4,5].map(s => (
-                <Ionicons key={s} name="star" size={14} color={s <= Math.floor(parseFloat(reviewStats?.avgRating || product.rating || 0)) ? '#fbbf24' : '#e5e7eb'} />
-              ))}
+              {[1,2,3,4,5].map(s => {
+                const rating = parseFloat(reviewStats?.avgRating || product.rating || 0);
+                let iconName: any = "star-outline";
+                if (rating >= s) {
+                  iconName = "star";
+                } else if (rating > s - 1) {
+                  iconName = "star-half";
+                }
+                return (
+                  <Ionicons key={s} name={iconName} size={14} color={iconName !== "star-outline" ? '#fbbf24' : '#e5e7eb'} />
+                );
+              })}
               <Text style={styles.ratingText}>{reviewStats?.avgRating || product.rating || '0'}</Text>
             </View>
             <Text style={styles.statDivider}>|</Text>
             <Text style={styles.statText}>{reviewStats?.reviewCount || 0} đánh giá</Text>
-            <Text style={styles.statDivider}>|</Text>
-            <Text style={styles.statText}>{reviewStats?.buyerCount || (product as any).soldQuantity || 0} đã mua</Text>
+
           </View>
 
           {/* Price */}

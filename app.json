@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "DacSanVietUI",
-    "slug": "DacSanVietUI",
+    "slug": "dac-san-viet-ui",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
@@ -37,7 +37,7 @@
           }
         }
       },
-      "bundleIdentifier": "com.anonymous.BaiTapTuan1-TypeScript"
+      "bundleIdentifier": "com.dacsanviet.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -50,13 +50,9 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE",
-        "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION",
-        "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
       ],
-      "package": "com.anonymous.BaiTapTuan1_TypeScript"
+      "package": "com.dacsanviet.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -67,6 +63,9 @@
         {
           "ios": {
             "deploymentTarget": "26.0"
+          },
+          "android": {
+            "ndkVersion": "27.0.12077973"
           }
         }
       ]

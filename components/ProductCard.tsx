@@ -72,21 +72,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onPress, styl
         
         {/* Rating Section */}
         <View className="flex-row items-center mb-2">
-          {/* 5 Stars */}
-          {[1, 2, 3, 4, 5].map((star) => (
-            <MaterialCommunityIcons 
-              key={star}
-              name="star" 
-              size={16} 
-              color="#fbbf24" 
-              style={{ marginRight: 2 }}
-            />
-          ))}
-          {/* Review Count */}
-          <View className="flex-row items-center ml-2">
-            <MaterialCommunityIcons name="message-text" size={14} color="#6b7280" />
-            <Text className="text-xs text-gray-500 ml-1">{product.soldCount || 97}</Text>
+          {/* Stars */}
+          <View className="flex-row mr-2">
+            {[1, 2, 3, 4, 5].map((star) => {
+              const rating = product.avgRating || product.rating || 0;
+              let iconName: "star" | "star-half-full" | "star-outline" = "star-outline";
+              if (rating >= star) {
+                iconName = "star";
+              } else if (rating > star - 1) {
+                iconName = "star-half-full";
+              }
+              return (
+                <MaterialCommunityIcons 
+                  key={star}
+                  name={iconName} 
+                  size={14} 
+                  color="#fbbf24" 
+                />
+              );
+            })}
           </View>
+          {/* Review Count */}
+          <View className="flex-row items-center">
+            <MaterialCommunityIcons name="message-text" size={12} color="#6b7280" />
+            <Text className="text-[10px] text-gray-500 ml-1">{product.reviewCount || 0}</Text>
+          </View>
+          <View className="mx-1 h-3 w-[1px] bg-gray-200" />
+          <Text className="text-[10px] text-gray-500">Đã bán {product.soldCount || 0}</Text>
         </View>
         
         {/* Description */}

@@ -87,8 +87,7 @@ export const DiscountedProductsSection: React.FC<DiscountedProductsSectionProps>
           ))}
           {/* Review Count */}
           <View className="flex-row items-center ml-2">
-            <MaterialCommunityIcons name="message-text" size={14} color="#6b7280" />
-            <Text className="text-xs text-gray-500 ml-1">{String(item.soldCount || 97)}</Text>
+            <Text className="text-[10px] text-gray-500">Đã bán {item.soldCount || 0}</Text>
           </View>
         </View>
         

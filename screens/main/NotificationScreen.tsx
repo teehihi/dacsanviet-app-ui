@@ -11,13 +11,16 @@ import { ApiService } from '../../services/api';
 import { useNotificationStore } from '../../store/notificationStore';
 
 const TYPE_ICON: Record<string, { icon: string; color: string }> = {
-  ORDER_NEW:       { icon: 'cart-check',        color: '#16a34a' },
-  ORDER_CONFIRMED: { icon: 'check-circle',       color: '#2563eb' },
-  ORDER_SHIPPING:  { icon: 'truck-delivery',     color: '#f59e0b' },
-  ORDER_DELIVERED: { icon: 'package-variant',    color: '#10b981' },
-  ORDER_CANCELLED: { icon: 'close-circle',       color: '#ef4444' },
-  NEW_REVIEW:      { icon: 'star',               color: '#fbbf24' },
-  DEFAULT:         { icon: 'bell',               color: '#6b7280' },
+  ORDER_NEW:              { icon: 'cart-check',           color: '#16a34a' },
+  ORDER_CONFIRMED:        { icon: 'check-circle',          color: '#2563eb' },
+  ORDER_PREPARING:        { icon: 'clock-outline',         color: '#8b5cf6' },
+  ORDER_SHIPPING:         { icon: 'truck-delivery',        color: '#f59e0b' },
+  ORDER_DELIVERED:        { icon: 'package-variant',       color: '#10b981' },
+  ORDER_CANCEL_REQUESTED: { icon: 'alert-circle-outline',  color: '#f87171' },
+  ORDER_CANCELLED:        { icon: 'close-circle',          color: '#ef4444' },
+  ORDER_RETURNED:         { icon: 'keyboard-return',       color: '#6b7280' },
+  NEW_REVIEW:             { icon: 'star',                  color: '#fbbf24' },
+  DEFAULT:                { icon: 'bell',                  color: '#6b7280' },
 };
 
 const NotificationScreen = () => {
