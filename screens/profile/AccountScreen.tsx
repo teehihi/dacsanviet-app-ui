@@ -25,10 +25,22 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
   const scrollY = useRef(new Animated.Value(0)).current;
   const [showCollapsedHeader, setShowCollapsedHeader] = useState(false);
   const [pointsBalance, setPointsBalance] = useState<number>(0);
+  const [orderCounts, setOrderCounts] = useState({ pending: 0, shipping: 0, delivered: 0 });
 
   useEffect(() => {
     ApiService.getLoyaltyPoints().then(res => {
       if (res.success && res.data) setPointsBalance(res.data.current_balance);
+    }).catch(() => {});
+
+    ApiService.getUserOrders({ page: 1, limit: 100 }).then(res => {
+      if (res.success && res.data) {
+        const orders = res.data;
+        setOrderCounts({
+          pending: orders.filter((o: any) => ['PENDING', 'CONFIRMED', 'PROCESSING'].includes(o.status)).length,
+          shipping: orders.filter((o: any) => o.status === 'SHIPPING').length,
+          delivered: orders.filter((o: any) => o.status === 'DELIVERED').length,
+        });
+      }
     }).catch(() => {});
   }, []);
 
@@ -96,12 +108,18 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
   const MenuItem = ({ icon, title, onPress, badge }: any) => (
     <TouchableOpacity style={styles.menuItem} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.menuItemLeft}>
-        <MaterialCommunityIcons name={icon} size={24} color="#333" />
+        <View style={styles.menuIconWrap}>
+          <Ionicons name={icon} size={20} color="#374151" />
+        </View>
         <Text style={styles.menuItemText}>{title}</Text>
       </View>
       <View style={styles.menuItemRight}>
-        {badge && <Text style={styles.badge}>{badge}</Text>}
-        <Ionicons name="chevron-forward" size={20} color="#999" />
+        {badge && (
+          <View style={styles.badgeWrap}>
+            <Text style={styles.badgeText}>{badge}</Text>
+          </View>
+        )}
+        <Ionicons name="chevron-forward" size={18} color="#9ca3af" />
       </View>
     </TouchableOpacity>
   );
@@ -178,112 +196,121 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-        {/* Main Menu Sections */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mục chính</Text>
-          <View style={styles.menuCard}>
-            <MenuItem
-              icon="receipt-text"
-              title="Đơn hàng của tôi"
-              onPress={() => navigation.navigate('Orders')}
-            />
-            <MenuItem
-              icon="wallet"
-              title="Ví của tôi"
-              onPress={() => {}}
-            />
-            <MenuItem
-              icon="plus-circle"
-              title="Thêm phương thức thanh toán"
-              onPress={() => {}}
-            />
+        {/* Order Status Bar */}
+        <View style={styles.orderStatusCard}>
+          <View style={styles.orderStatusHeader}>
+            <Text style={styles.orderStatusTitle}>Đơn hàng của tôi</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Orders', {
+              screen: 'OrdersMain',
+              params: { initialTab: 'ALL' },
+            })} style={styles.orderStatusSeeAll}>
+              <Text style={styles.orderStatusSeeAllText}>Xem tất cả</Text>
+              <Ionicons name="chevron-forward" size={14} color="#16a34a" />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.orderStatusRow}>
+            {[
+              { icon: 'cube-outline', label: 'Chờ xác\nnhận', count: orderCounts.pending, tab: 'PENDING' },
+              { icon: 'car-outline', label: 'Đang giao', count: orderCounts.shipping, tab: 'SHIPPING' },
+              { icon: 'checkmark-circle-outline', label: 'Hoàn thành', count: orderCounts.delivered, tab: 'DELIVERED' },
+              { icon: 'star-outline', label: 'Đánh giá', count: 0, tab: 'DELIVERED' },
+            ].map((item, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.orderStatusItem}
+                onPress={() => navigation.navigate('Orders', {
+                  screen: 'OrdersMain',
+                  params: { initialTab: item.tab },
+                })}
+                activeOpacity={0.7}
+              >
+                <View style={styles.orderStatusIconWrap}>
+                  <Ionicons name={item.icon as any} size={26} color="#16a34a" />
+                  {item.count > 0 && (
+                    <View style={styles.orderStatusBadge}>
+                      <Text style={styles.orderStatusBadgeText}>{item.count}</Text>
+                    </View>
+                  )}
+                </View>
+                <Text style={styles.orderStatusLabel}>{item.label}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
 
+        {/* Tài khoản */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Hoạt động</Text>
+          <Text style={styles.sectionTitle}>Tài khoản</Text>
           <View style={styles.menuCard}>
             <MenuItem
-              icon="briefcase"
-              title="Trung tâm Doanh nghiệp"
-              onPress={() => {}}
-            />
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ưu đãi và tiết kiệm</Text>
-          <View style={styles.menuCard}>
-            <MenuItem
-              icon="gift"
-              title="DacSanVietXu"
-              badge={`${(pointsBalance || 0).toLocaleString('vi-VN')} Xu`}
-              onPress={() => navigation.navigate('Coupons', { initialTab: 'points' } as never)}
-            />
-            <MenuItem
-              icon="account-group"
-              title="Gói Hội Viên"
-              onPress={() => {}}
-            />
-            <MenuItem
-              icon="calendar-check"
-              title="Thử thách"
-              onPress={() => {}}
-            />
-          </View>
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Tổng quát</Text>
-          <View style={styles.menuCard}>
-            <MenuItem
-              icon="heart"
+              icon="heart-outline"
               title="Sản phẩm yêu thích"
               onPress={() => navigation.navigate('Favorites')}
             />
             <MenuItem
-              icon="ticket-percent"
-              title="Mã giảm giá & Điểm thưởng"
-              onPress={() => navigation.navigate('Coupons')}
+              icon="location-outline"
+              title="Địa chỉ giao hàng"
+              onPress={() => navigation.navigate('AddressList' as never)}
             />
             <MenuItem
-              icon="chart-line"
-              title="Thống kê dòng tiền"
-              onPress={() => navigation.navigate('SpendingStats' as never)}
-            />
-            <MenuItem
-              icon="bell-outline"
-              title="Thông báo"
-              onPress={() => navigation.navigate('Notifications' as never)}
-            />
-            <MenuItem
-              icon="silverware-fork-knife"
-              title="Chế độ ăn uống"
-              onPress={() => {}}
-            />
-            <MenuItem
-              icon="credit-card"
+              icon="card-outline"
               title="Phương thức thanh toán"
               onPress={() => {}}
             />
             <MenuItem
-              icon="cog"
+              icon="gift-outline"
+              title="Ưu đãi của tôi"
+              onPress={() => navigation.navigate('Coupons')}
+            />
+          </View>
+        </View>
+
+        {/* Cài đặt */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Cài đặt</Text>
+          <View style={styles.menuCard}>
+            <MenuItem
+              icon="notifications-outline"
+              title="Thông báo"
+              onPress={() => navigation.navigate('Notifications' as never)}
+            />
+            <MenuItem
+              icon="shield-checkmark-outline"
+              title="Bảo mật"
+              onPress={() => navigation.navigate('ChangePassword' as never)}
+            />
+            <MenuItem
+              icon="settings-outline"
               title="Cài đặt"
               onPress={() => {}}
             />
           </View>
         </View>
 
-        {/* Logout Section */}
+        {/* Hỗ trợ */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Hỗ trợ</Text>
+          <View style={styles.menuCard}>
+            <MenuItem
+              icon="help-circle-outline"
+              title="Trung tâm trợ giúp"
+              onPress={() => {}}
+            />
+          </View>
+        </View>
+
+        {/* Đăng xuất */}
         <View style={styles.section}>
           <View style={styles.menuCard}>
-            <TouchableOpacity 
-              style={styles.logoutItem} 
-              onPress={handleLogout} 
+            <TouchableOpacity
+              style={styles.logoutItem}
+              onPress={handleLogout}
               activeOpacity={0.7}
             >
               <View style={styles.menuItemLeft}>
-                <MaterialCommunityIcons name="logout" size={24} color="#dc2626" />
+                <View style={styles.logoutIconWrap}>
+                  <MaterialCommunityIcons name="logout" size={20} color="#dc2626" />
+                </View>
                 <Text style={styles.logoutText}>Đăng xuất</Text>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#dc2626" />
@@ -291,7 +318,11 @@ const AccountScreen: React.FC<AccountScreenProps> = ({ navigation }) => {
           </View>
         </View>
 
-        <View style={{ height: 100 }} />
+        {/* Version */}
+        <View style={{ alignItems: 'center', paddingBottom: 100, paddingTop: 8 }}>
+          <Text style={{ color: '#9ca3af', fontSize: 12 }}>Phiên bản 1.0.0</Text>
+          <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 2 }}>© 2026 DacSanViet. All rights reserved.</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -492,6 +523,116 @@ const styles = StyleSheet.create({
     color: '#dc2626',
     marginLeft: 12,
     fontWeight: '500',
+  },
+  // Order status bar
+  orderStatusCard: {
+    backgroundColor: '#fff',
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  orderStatusHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  orderStatusTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  orderStatusSeeAll: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  orderStatusSeeAllText: {
+    fontSize: 13,
+    color: '#16a34a',
+    fontWeight: '600',
+    marginRight: 2,
+  },
+  orderStatusRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  orderStatusItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  orderStatusIconWrap: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#f0fdf4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 6,
+  },
+  orderStatusBadge: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    backgroundColor: '#ef4444',
+    borderRadius: 9,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 1.5,
+    borderColor: '#fff',
+  },
+  orderStatusBadgeText: {
+    color: '#fff',
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  orderStatusLabel: {
+    fontSize: 11,
+    color: '#374151',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
+  // Menu icon wrap
+  menuIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#f3f4f6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  badgeWrap: {
+    backgroundColor: '#ef4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 6,
+    marginRight: 6,
+  },
+  badgeText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '700',
+  },
+  logoutIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#fef2f2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
   },
 });
 

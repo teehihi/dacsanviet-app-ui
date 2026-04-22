@@ -8,13 +8,35 @@ import {
   Alert,
   ActivityIndicator,
   StatusBar,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { ApiService, getProductImage } from '../../services/api';
 import { Order, OrderStatus } from '../../types/order';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+
+const STATUS_STEPS = [
+  { status: 'PENDING', label: 'Đơn hàng đã được đặt', icon: 'receipt-outline' },
+  { status: 'CONFIRMED', label: 'Đơn hàng đã được xác nhận', icon: 'checkmark-circle-outline' },
+  { status: 'PROCESSING', label: 'Đang đóng gói', icon: 'cube-outline' },
+  { status: 'SHIPPING', label: 'Đang giao hàng', icon: 'car-outline' },
+  { status: 'DELIVERED', label: 'Giao hàng thành công', icon: 'checkmark-done-outline' },
+];
+
+const STATUS_ORDER = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPING', 'DELIVERED'];
+
+const STATUS_BANNER: Record<string, { label: string; color: string }> = {
+  PENDING: { label: 'Chờ xác nhận', color: '#f97316' },
+  CONFIRMED: { label: 'Đã xác nhận', color: '#f97316' },
+  PROCESSING: { label: 'Đang đóng gói', color: '#8b5cf6' },
+  SHIPPING: { label: 'Đang giao hàng', color: '#3b82f6' },
+  DELIVERED: { label: 'Giao hàng thành công', color: '#16a34a' },
+  CANCELLED: { label: 'Đã hủy', color: '#ef4444' },
+  NEW: { label: 'Mới', color: '#f97316' },
+  PREPARING: { label: 'Đang chuẩn bị', color: '#8b5cf6' },
+  CANCEL_REQUESTED: { label: 'Yêu cầu hủy', color: '#ef4444' },
+};
 
 const OrderDetailScreen = () => {
   const route = useRoute();
@@ -34,7 +56,6 @@ const OrderDetailScreen = () => {
     try {
       setLoading(true);
       const response = await ApiService.getOrderById(orderId);
-      
       if (response.success && response.data) {
         setOrder(response.data.order);
         setReviewStatus(response.data.reviewStatus || null);
@@ -42,8 +63,7 @@ const OrderDetailScreen = () => {
         Alert.alert('Lỗi', 'Không tìm thấy đơn hàng');
         navigation.goBack();
       }
-    } catch (error) {
-      console.error('Load order error:', error);
+    } catch {
       Alert.alert('Lỗi', 'Không thể tải thông tin đơn hàng');
       navigation.goBack();
     } finally {
@@ -51,37 +71,11 @@ const OrderDetailScreen = () => {
     }
   };
 
-  const getStatusSteps = (currentStatus: OrderStatus) => {
-    const steps = [
-      { status: 'PENDING', label: 'Chờ xác nhận', icon: 'receipt-outline', isActive: false, isCurrent: false },
-      { status: 'CONFIRMED', label: 'Đã xác nhận', icon: 'checkmark-circle-outline', isActive: false, isCurrent: false },
-      { status: 'PROCESSING', label: 'Đang xử lý', icon: 'time-outline', isActive: false, isCurrent: false },
-      { status: 'SHIPPING', label: 'Đang giao hàng', icon: 'car-outline', isActive: false, isCurrent: false },
-      { status: 'DELIVERED', label: 'Đã giao', icon: 'checkmark-done-outline', isActive: false, isCurrent: false },
-    ];
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('vi-VN').format(price) + 'đ';
 
-    if (currentStatus === 'CANCELLED') {
-      return [{ status: currentStatus, label: 'Đã hủy', icon: 'close-circle-outline', isActive: true, isCurrent: true }];
-    }
-
-    const statusOrder = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPING', 'DELIVERED'];
-    const currentIndex = statusOrder.indexOf(currentStatus);
-    
-    return steps.map((step, index) => ({
-      ...step,
-      isActive: index <= currentIndex,
-      isCurrent: index === currentIndex,
-    }));
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
-    }).format(price);
-  };
-
-  const formatDate = (dateString: string) => {
+  const formatDateTime = (dateString?: string) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleString('vi-VN', {
       timeZone: 'Asia/Ho_Chi_Minh',
@@ -94,24 +88,16 @@ const OrderDetailScreen = () => {
   };
 
   const canCancelOrder = (order: Order): boolean => {
-    if (!order.canCancel || order.status === 'CANCELLED' || order.status === 'DELIVERED') {
-      return false;
-    }
-    
-    if (order.cancelDeadline) {
-      const deadline = new Date(order.cancelDeadline);
-      return new Date() < deadline;
-    }
-    
+    if (!order.canCancel || order.status === 'CANCELLED' || order.status === 'DELIVERED') return false;
+    if (order.cancelDeadline) return new Date() < new Date(order.cancelDeadline);
     return false;
   };
 
   const handleCancelOrder = () => {
     if (!order) return;
-
     Alert.alert(
       'Hủy đơn hàng',
-      `Bạn có chắc muốn hủy đơn hàng ${order.order_number || order.code || order.id}?`,
+      `Bạn có chắc muốn hủy đơn hàng ${order.order_number || order.id}?`,
       [
         { text: 'Không', style: 'cancel' },
         {
@@ -131,151 +117,246 @@ const OrderDetailScreen = () => {
     );
   };
 
+  const getStepTimestamp = (step: typeof STATUS_STEPS[0], order: Order): string => {
+    switch (step.status) {
+      case 'PENDING': return formatDateTime(order.createdAt);
+      case 'CONFIRMED': return formatDateTime(order.confirmedAt);
+      case 'DELIVERED': return formatDateTime(order.deliveredAt);
+      default: return '';
+    }
+  };
+
+  const getEstimatedDelivery = (order: Order): string => {
+    const created = new Date(order.createdAt);
+    created.setDate(created.getDate() + 3);
+    return created.toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  };
+
+  const subtotal = order ? order.items.reduce((sum, item) => sum + item.price * item.quantity, 0) : 0;
+  const shippingFee = 30000;
+  const discount = order ? Math.max(0, subtotal + shippingFee - order.totalAmount) : 0;
+
   if (loading) {
     return (
-      <View className="flex-1 bg-white">
-        <StatusBar barStyle="light-content" />
-        <LinearGradient colors={['#16a34a', '#15803d']} style={{ paddingTop: 0 }}>
-          <SafeAreaView edges={['top']} style={{ backgroundColor: '#16a34a' }}>
-            <View className="px-4 py-4 flex-row items-center">
-              <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-                <Ionicons name="arrow-back" size={24} color="white" />
-              </TouchableOpacity>
-              <Text className="text-white text-xl font-bold">Chi tiết đơn hàng</Text>
-            </View>
-          </SafeAreaView>
-        </LinearGradient>
-        
-        <View className="flex-1 justify-center items-center">
+      <View style={{ flex: 1, backgroundColor: '#fff' }}>
+        <StatusBar barStyle="dark-content" />
+        <SafeAreaView edges={['top']} style={{ backgroundColor: '#fff' }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
+              <Ionicons name="arrow-back" size={24} color="#1f2937" />
+            </TouchableOpacity>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: '#1f2937' }}>Chi tiết đơn hàng</Text>
+          </View>
+        </SafeAreaView>
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
           <ActivityIndicator size="large" color="#16a34a" />
         </View>
       </View>
     );
   }
 
-  if (!order) {
-    return (
-      <View className="flex-1 bg-white">
-        <StatusBar barStyle="light-content" />
-        <LinearGradient colors={['#16a34a', '#15803d']} style={{ paddingTop: 0 }}>
-          <SafeAreaView edges={['top']} style={{ backgroundColor: '#16a34a' }}>
-            <View className="px-4 py-4 flex-row items-center">
-              <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-                <Ionicons name="arrow-back" size={24} color="white" />
-              </TouchableOpacity>
-              <Text className="text-white text-xl font-bold">Chi tiết đơn hàng</Text>
-            </View>
-          </SafeAreaView>
-        </LinearGradient>
-        
-        <View className="flex-1 justify-center items-center">
-          <Text className="text-gray-500">Không tìm thấy đơn hàng</Text>
-        </View>
-      </View>
-    );
-  }
+  if (!order) return null;
 
-  const statusSteps = getStatusSteps(order.status);
+  const bannerCfg = STATUS_BANNER[order.status] || STATUS_BANNER.PENDING;
+  const currentStepIndex = STATUS_ORDER.indexOf(order.status);
   const canCancel = canCancelOrder(order);
 
   return (
-    <View className="flex-1 bg-gray-50">
-      <StatusBar barStyle="light-content" />
-      <LinearGradient colors={['#16a34a', '#15803d']} style={{ paddingTop: 0 }}>
-        <SafeAreaView edges={['top']} style={{ backgroundColor: '#16a34a' }}>
-          <View className="px-4 py-4 flex-row items-center">
-            <TouchableOpacity onPress={() => navigation.goBack()} className="mr-3">
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-            <Text className="text-white text-xl font-bold">Chi tiết đơn hàng</Text>
+    <View style={{ flex: 1, backgroundColor: '#f3f4f6' }}>
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+
+      {/* Header */}
+      <SafeAreaView edges={['top']} style={{ backgroundColor: '#fff' }}>
+        <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 }}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginRight: 12 }}>
+            <Ionicons name="arrow-back" size={24} color="#1f2937" />
+          </TouchableOpacity>
+          <View>
+            <Text style={{ fontSize: 20, fontWeight: '700', color: '#1f2937' }}>Chi tiết đơn hàng</Text>
+            <Text style={{ fontSize: 12, color: '#9ca3af' }}>{order.order_number || order.id}</Text>
           </View>
-        </SafeAreaView>
-      </LinearGradient>
-
-      <ScrollView className="flex-1">
-        {/* Status Timeline */}
-        <View className="bg-white p-4 mb-2">
-          <Text className="font-bold text-gray-800 text-lg mb-4">Trạng thái đơn hàng</Text>
-          
-          {statusSteps.map((step, index) => (
-            <View key={index} className="flex-row items-start mb-4">
-              <View className="items-center mr-3">
-                <View
-                  className={`w-10 h-10 rounded-full items-center justify-center ${
-                    step.isActive ? 'bg-green-500' : 'bg-gray-300'
-                  }`}
-                >
-                  <Ionicons
-                    name={step.icon as any}
-                    size={20}
-                    color="white"
-                  />
-                </View>
-                {index < statusSteps.length - 1 && (
-                  <View className={`w-0.5 h-8 ${step.isActive ? 'bg-green-500' : 'bg-gray-300'}`} />
-                )}
-              </View>
-              
-              <View className="flex-1">
-                <Text className={`font-semibold ${step.isActive ? 'text-gray-800' : 'text-gray-400'}`}>
-                  {step.label}
-                </Text>
-                {step.isCurrent && (
-                  <Text className="text-sm text-gray-500 mt-1">
-                    {formatDate(order.createdAt)}
-                  </Text>
-                )}
-              </View>
-            </View>
-          ))}
         </View>
+      </SafeAreaView>
 
-        {/* Shipping Address */}
-        <View className="bg-white p-4 mb-2">
-          <Text className="font-bold text-gray-800 text-lg mb-3">Địa chỉ giao hàng</Text>
-          <View className="flex-row items-start">
-            <Ionicons name="location-outline" size={20} color="#6b7280" />
-            <View className="ml-2 flex-1">
-              <Text className="font-semibold text-gray-800">{order.shippingAddress.fullName}</Text>
-              <Text className="text-gray-600 mt-1">{order.shippingAddress.phoneNumber}</Text>
-              <Text className="text-gray-600 mt-1">
-                {order.shippingAddress.address}, {order.shippingAddress.ward}, {order.shippingAddress.district}, {order.shippingAddress.city}
-              </Text>
-              {order.shippingAddress.note && (
-                <Text className="text-gray-500 text-sm mt-2 italic">
-                  Ghi chú: {order.shippingAddress.note}
-                </Text>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ paddingBottom: 32 }}>
+
+        {/* Status Banner */}
+        {order.status !== 'CANCELLED' && (
+          <View style={{
+            backgroundColor: bannerCfg.color,
+            marginHorizontal: 16,
+            marginTop: 12,
+            borderRadius: 12,
+            padding: 16,
+            flexDirection: 'row',
+            alignItems: 'center',
+          }}>
+            <View style={{
+              width: 40, height: 40, borderRadius: 20,
+              backgroundColor: 'rgba(255,255,255,0.25)',
+              alignItems: 'center', justifyContent: 'center', marginRight: 12,
+            }}>
+              <Ionicons name="car-outline" size={22} color="#fff" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 16 }}>{bannerCfg.label}</Text>
+              {order.status === 'SHIPPING' && (
+                <>
+                  <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12, marginTop: 2 }}>
+                    Mã vận đơn: VN{order.numericId || '123456789'}
+                  </Text>
+                  <Text style={{ color: 'rgba(255,255,255,0.85)', fontSize: 12 }}>
+                    Dự kiến giao hàng: {getEstimatedDelivery(order)}
+                  </Text>
+                </>
               )}
             </View>
           </View>
+        )}
+
+        {/* Timeline */}
+        {order.status !== 'CANCELLED' ? (
+          <View style={{ backgroundColor: '#fff', marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 16 }}>
+            <Text style={{ fontWeight: '700', fontSize: 16, color: '#1f2937', marginBottom: 16 }}>
+              Trạng thái đơn hàng
+            </Text>
+            {STATUS_STEPS.map((step, index) => {
+              const isActive = index <= currentStepIndex;
+              const isCurrent = index === currentStepIndex;
+              const timestamp = getStepTimestamp(step, order);
+              return (
+                <View key={step.status} style={{ flexDirection: 'row', alignItems: 'flex-start', marginBottom: index < STATUS_STEPS.length - 1 ? 0 : 0 }}>
+                  {/* Line + dot */}
+                  <View style={{ alignItems: 'center', width: 32, marginRight: 12 }}>
+                    <View style={{
+                      width: 28, height: 28, borderRadius: 14,
+                      backgroundColor: isActive ? '#16a34a' : '#e5e7eb',
+                      alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Ionicons
+                        name={step.icon as any}
+                        size={14}
+                        color={isActive ? '#fff' : '#9ca3af'}
+                      />
+                    </View>
+                    {index < STATUS_STEPS.length - 1 && (
+                      <View style={{
+                        width: 2, height: 32,
+                        backgroundColor: index < currentStepIndex ? '#16a34a' : '#e5e7eb',
+                      }} />
+                    )}
+                  </View>
+                  {/* Label */}
+                  <View style={{ flex: 1, paddingTop: 4, paddingBottom: index < STATUS_STEPS.length - 1 ? 0 : 0, minHeight: 44 }}>
+                    <Text style={{
+                      fontWeight: isCurrent ? '700' : '500',
+                      color: isActive ? '#1f2937' : '#9ca3af',
+                      fontSize: 14,
+                    }}>
+                      {step.label}
+                    </Text>
+                    {timestamp ? (
+                      <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 2 }}>{timestamp}</Text>
+                    ) : isCurrent ? null : !isActive ? (
+                      <Text style={{ color: '#d1d5db', fontSize: 12, marginTop: 2 }}>
+                        {index === STATUS_STEPS.length - 1 ? `Dự kiến ${getEstimatedDelivery(order)}` : ''}
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        ) : (
+          <View style={{ backgroundColor: '#fff', marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 16 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <View style={{
+                width: 36, height: 36, borderRadius: 18,
+                backgroundColor: '#fef2f2', alignItems: 'center', justifyContent: 'center', marginRight: 12,
+              }}>
+                <Ionicons name="close-circle" size={20} color="#ef4444" />
+              </View>
+              <View>
+                <Text style={{ fontWeight: '700', color: '#ef4444', fontSize: 15 }}>Đơn hàng đã bị hủy</Text>
+                {order.cancelledAt && (
+                  <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 2 }}>{formatDateTime(order.cancelledAt)}</Text>
+                )}
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* Shipping Address */}
+        <View style={{ backgroundColor: '#fff', marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+            <View style={{
+              width: 32, height: 32, borderRadius: 16,
+              backgroundColor: '#f0fdf4', alignItems: 'center', justifyContent: 'center', marginRight: 10,
+            }}>
+              <Ionicons name="location" size={16} color="#16a34a" />
+            </View>
+            <Text style={{ fontWeight: '700', fontSize: 15, color: '#1f2937' }}>Địa chỉ giao hàng</Text>
+          </View>
+          <Text style={{ fontWeight: '600', color: '#1f2937', fontSize: 14 }}>
+            {order.shippingAddress.fullName} | {order.shippingAddress.phoneNumber}
+          </Text>
+          <Text style={{ color: '#6b7280', fontSize: 13, marginTop: 4, lineHeight: 20 }}>
+            {order.shippingAddress.address}, {order.shippingAddress.ward}, {order.shippingAddress.district}, {order.shippingAddress.city}
+          </Text>
+          {order.shippingAddress.note && (
+            <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 6, fontStyle: 'italic' }}>
+              Ghi chú: {order.shippingAddress.note}
+            </Text>
+          )}
         </View>
 
         {/* Products */}
-        <View className="bg-white p-4 mb-2">
-          <Text className="font-bold text-gray-800 text-lg mb-3">Sản phẩm</Text>
-          
+        <View style={{ backgroundColor: '#fff', marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 16 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+            <View style={{
+              width: 32, height: 32, borderRadius: 16,
+              backgroundColor: '#faf5ff', alignItems: 'center', justifyContent: 'center', marginRight: 10,
+            }}>
+              <Ionicons name="bag-outline" size={16} color="#8b5cf6" />
+            </View>
+            <Text style={{ fontWeight: '700', fontSize: 15, color: '#1f2937' }}>
+              Sản phẩm ({order.items.length})
+            </Text>
+          </View>
+
           {order.items.map((item, index) => (
-            <View key={index} className="flex-row mb-4 pb-4 border-b border-gray-200">
+            <View
+              key={index}
+              style={{
+                flexDirection: 'row',
+                paddingVertical: 12,
+                borderTopWidth: index > 0 ? 1 : 0,
+                borderTopColor: '#f3f4f6',
+              }}
+            >
               <Image
-                source={{ 
+                source={{
                   uri: getProductImage(
                     item.productImage || '',
-                    item.category || '',
+                    (item as any).category || '',
                     item.productName,
                     item.productId
-                  )
+                  ),
                 }}
-                className="w-16 h-16 rounded-lg"
+                style={{ width: 64, height: 64, borderRadius: 8, backgroundColor: '#f3f4f6' }}
                 resizeMode="cover"
               />
-              
-              <View className="flex-1 ml-3">
-                <Text className="font-semibold text-gray-800" numberOfLines={2}>
+              <View style={{ flex: 1, marginLeft: 12 }}>
+                <Text style={{ fontWeight: '600', color: '#1f2937', fontSize: 14 }} numberOfLines={2}>
                   {item.productName}
                 </Text>
-                <View className="flex-row justify-between items-center mt-2">
-                  <Text className="text-gray-600">x{item.quantity}</Text>
-                  <Text className="text-green-600 font-bold">
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6 }}>
+                  <Text style={{ color: '#9ca3af', fontSize: 13 }}>x{item.quantity}</Text>
+                  <Text style={{ color: '#16a34a', fontWeight: '700', fontSize: 14 }}>
                     {formatPrice(item.price)}
                   </Text>
                 </View>
@@ -284,51 +365,59 @@ const OrderDetailScreen = () => {
           ))}
         </View>
 
-        {/* Payment Summary */}
-        <View className="bg-white p-4 mb-2">
-          <Text className="font-bold text-gray-800 text-lg mb-3">Thanh toán</Text>
-          
-          <View className="flex-row justify-between mb-2">
-            <Text className="text-gray-600">Phương thức:</Text>
-            <Text className="font-semibold text-gray-800">
-              {order.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng' : order.paymentMethod}
-            </Text>
+        {/* Payment Info */}
+        <View style={{ backgroundColor: '#fff', marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 16 }}>
+          <Text style={{ fontWeight: '700', fontSize: 15, color: '#1f2937', marginBottom: 12 }}>
+            Thông tin thanh toán
+          </Text>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+            <Text style={{ color: '#6b7280', fontSize: 14 }}>Tạm tính</Text>
+            <Text style={{ color: '#1f2937', fontSize: 14 }}>{formatPrice(subtotal)}</Text>
           </View>
-          
-          <View className="flex-row justify-between pt-3 border-t border-gray-200">
-            <Text className="font-bold text-gray-800 text-lg">Tổng cộng:</Text>
-            <Text className="font-bold text-green-600 text-xl">
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+            <Text style={{ color: '#6b7280', fontSize: 14 }}>Phí vận chuyển</Text>
+            <Text style={{ color: '#1f2937', fontSize: 14 }}>{formatPrice(shippingFee)}</Text>
+          </View>
+          {discount > 0 && (
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+              <Text style={{ color: '#6b7280', fontSize: 14 }}>Giảm giá</Text>
+              <Text style={{ color: '#ef4444', fontSize: 14 }}>-{formatPrice(discount)}</Text>
+            </View>
+          )}
+
+          <View style={{
+            flexDirection: 'row', justifyContent: 'space-between',
+            paddingTop: 12, borderTopWidth: 1, borderTopColor: '#f3f4f6', marginTop: 4,
+          }}>
+            <Text style={{ fontWeight: '700', fontSize: 16, color: '#1f2937' }}>Tổng cộng</Text>
+            <Text style={{ fontWeight: '700', fontSize: 18, color: '#16a34a' }}>
               {formatPrice(order.totalAmount)}
             </Text>
           </View>
+
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+            <Text style={{ color: '#6b7280', fontSize: 13 }}>Phương thức thanh toán</Text>
+            <Text style={{ color: '#1f2937', fontSize: 13, fontWeight: '500' }}>
+              {order.paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng' : order.paymentMethod}
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+            <Text style={{ color: '#6b7280', fontSize: 13 }}>Trạng thái</Text>
+            <Text style={{ color: '#ef4444', fontSize: 13, fontWeight: '500' }}>Chưa thanh toán</Text>
+          </View>
         </View>
 
-        {/* Cancel Button */}
-        {canCancel && (
-          <View className="px-4 py-4">
-            <TouchableOpacity
-              className="bg-red-500 py-4 rounded-xl items-center"
-              onPress={handleCancelOrder}
-            >
-              <Text className="text-white font-bold text-lg">Hủy đơn hàng</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Review Button - only for DELIVERED orders */}
-        {order.status === 'DELIVERED' && reviewStatus && reviewStatus.canReview && (
-          <View className="px-4 pb-4">
+        {/* Review section */}
+        {order.status === 'DELIVERED' && reviewStatus?.canReview && (
+          <View style={{ marginHorizontal: 16, marginTop: 12 }}>
             {reviewStatus.allReviewed ? (
-              <View
-                className="py-4 rounded-xl items-center"
-                style={{ backgroundColor: '#e5e7eb' }}
-              >
-                <Text className="text-gray-500 font-bold text-lg">Đã đánh giá sản phẩm</Text>
+              <View style={{ backgroundColor: '#f3f4f6', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}>
+                <Text style={{ color: '#9ca3af', fontWeight: '600', fontSize: 15 }}>Đã đánh giá sản phẩm</Text>
               </View>
             ) : (
               <TouchableOpacity
-                className="py-4 rounded-xl items-center"
-                style={{ backgroundColor: '#16a34a' }}
+                style={{ backgroundColor: '#16a34a', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
                 onPress={() => {
                   if (order.items.length > 0) {
                     const item = order.items[0];
@@ -337,18 +426,50 @@ const OrderDetailScreen = () => {
                       productId: item.productId,
                       productName: item.productName,
                       productImage: item.productImage,
-                      category: item.category || '',
+                      category: (item as any).category || '',
                     });
                   }
                 }}
               >
-                <Text className="text-white font-bold text-lg">Đánh giá sản phẩm</Text>
+                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Đánh giá sản phẩm</Text>
               </TouchableOpacity>
             )}
           </View>
         )}
 
-        <View className="h-6" />
+        {/* Bottom action buttons */}
+        <View style={{ flexDirection: 'row', marginHorizontal: 16, marginTop: 16, gap: 10 }}>
+          <TouchableOpacity
+            style={{
+              flex: 1,
+              borderWidth: 1.5,
+              borderColor: '#16a34a',
+              borderRadius: 12,
+              paddingVertical: 14,
+              alignItems: 'center',
+            }}
+            onPress={() => Alert.alert('Liên hệ', 'Tính năng đang phát triển')}
+          >
+            <Text style={{ color: '#16a34a', fontWeight: '700', fontSize: 15 }}>Liên hệ người bán</Text>
+          </TouchableOpacity>
+
+          {order.status === 'SHIPPING' ? (
+            <TouchableOpacity
+              style={{ flex: 1, backgroundColor: '#16a34a', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
+              onPress={() => Alert.alert('Theo dõi', 'Tính năng đang phát triển')}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Theo dõi đơn hàng</Text>
+            </TouchableOpacity>
+          ) : canCancel ? (
+            <TouchableOpacity
+              style={{ flex: 1, backgroundColor: '#ef4444', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
+              onPress={handleCancelOrder}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Hủy đơn hàng</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
+
       </ScrollView>
     </View>
   );

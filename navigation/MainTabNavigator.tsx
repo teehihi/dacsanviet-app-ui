@@ -98,7 +98,7 @@ export const MainTabNavigator = () => {
         tabBarPosition="bottom"
         tabBar={(props) => <GlassTabBar {...props as any} />}
         screenOptions={{
-          swipeEnabled: true,
+          swipeEnabled: false,
           animationEnabled: true,
         }}
       >
