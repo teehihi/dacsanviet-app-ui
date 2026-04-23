@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,8 +10,10 @@ import {
   Modal,
   ScrollView,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Product as ApiProduct } from '../../types/api';
 import { ApiService, getProductImage } from '../../services/api';
@@ -40,7 +42,8 @@ interface SearchScreenProps extends NavigationProps {
   };
 }
 
-const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
+const SearchScreen: React.FC<SearchScreenProps> = ({ navigation }) => {
+  const route = useRoute<any>();
   const initialQuery = route?.params?.initialQuery || '';
   const initialCategory = route?.params?.category || '';
   const addItem = useCartStore((state) => state.addItem);
@@ -49,6 +52,7 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
   const [products, setProducts] = useState<ApiProduct[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [pagination, setPagination] = useState({
     page: 1,
     totalPages: 1,
@@ -62,12 +66,15 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
     sortOrder: 'desc',
   });
 
-  // Set initial query when component mounts
-  useEffect(() => {
-    if (initialQuery) {
-      setSearchQuery(initialQuery);
-    }
-  }, [initialQuery]);
+  // Clear search khi focus vào tab mà không có query (vd: bấm tab Search trực tiếp)
+  // Set query khi được navigate từ homepage với initialQuery
+  useFocusEffect(
+    useCallback(() => {
+      const q = (route?.params as any)?.initialQuery ?? '';
+      setSearchQuery(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [route?.params])
+  );
 
   // Load categories on mount
   useEffect(() => {
@@ -82,11 +89,13 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
   const loadCategories = async () => {
     try {
       const response = await ApiService.getCategories();
-      
       if (response.success && response.data) {
-        setCategories(response.data);
+        // API có thể trả về string[] hoặc object[] — normalize về string[]
+        const cats = response.data.map((c: any) =>
+          typeof c === 'string' ? c : (c.name ?? String(c))
+        );
+        setCategories(cats);
       } else {
-        console.error('❌ Categories failed:', response?.message || 'Unknown error');
         setCategories([]);
       }
     } catch (error: any) {
@@ -130,6 +139,11 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
       setLoading(false);
     }
   };
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadProducts(1).finally(() => setRefreshing(false));
+  }, [searchQuery, filters]);
 
   const getSortParam = (): 'newest' | 'price_asc' | 'price_desc' => {
     return filters.sortBy;
@@ -418,6 +432,14 @@ const SearchScreen: React.FC<SearchScreenProps> = ({ route, navigation }) => {
           contentContainerStyle={styles.productsList}
           showsVerticalScrollIndicator={false}
           style={styles.flatList}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#10b981"
+              colors={['#10b981']}
+            />
+          }
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Ionicons name="search" size={64} color="#d1d5db" />

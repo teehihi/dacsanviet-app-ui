@@ -10,7 +10,7 @@ export type OrderStatus =
   | 'PREPARING'        // legacy
   | 'CANCEL_REQUESTED'; // Yêu cầu hủy đơn
 
-export type PaymentMethod = 'COD' | 'MOMO' | 'VNPAY' | 'BANK_TRANSFER' | 'CREDIT_CARD';
+export type PaymentMethod = 'COD' | 'ZALOPAY' | 'VNPAY' | 'BANK_TRANSFER' | 'CREDIT_CARD';
 
 export interface OrderItem {
   productId: number;
@@ -40,6 +40,7 @@ export interface Order {
   totalAmount: number;
   shippingAddress: ShippingAddress;
   paymentMethod: PaymentMethod;
+  paymentStatus?: 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED';
   status: OrderStatus;
   createdAt: string;
   confirmedAt?: string;

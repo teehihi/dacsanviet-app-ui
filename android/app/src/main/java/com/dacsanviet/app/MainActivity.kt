@@ -1,5 +1,6 @@
-package com.anonymous.BaiTapTuan1_TypeScript
+package com.dacsanviet.app
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 
@@ -9,14 +10,17 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnable
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 
 import expo.modules.ReactActivityDelegateWrapper
+import vn.zalopay.sdk.ZaloPaySDK
 
 class MainActivity : ReactActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
-    // Set the theme to AppTheme BEFORE onCreate to support
-    // coloring the background, status bar, and navigation bar.
-    // This is required for expo-splash-screen.
     setTheme(R.style.AppTheme);
     super.onCreate(null)
+  }
+
+  override fun onNewIntent(intent: Intent) {
+    super.onNewIntent(intent)
+    ZaloPaySDK.getInstance().onResult(intent)
   }
 
   /**

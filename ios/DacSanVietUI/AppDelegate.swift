@@ -1,6 +1,7 @@
 internal import Expo
 import React
 import ReactAppDependencyProvider
+import zpdk
 
 @main
 class AppDelegate: ExpoAppDelegate {
@@ -20,6 +21,9 @@ class AppDelegate: ExpoAppDelegate {
     reactNativeDelegate = delegate
     reactNativeFactory = factory
 
+    // Khởi tạo ZaloPay SDK - Sandbox environment
+    ZaloPaySDK.sharedInstance()?.initWithAppId(2554, uriScheme: "dacsanviet", environment: ZPZPIEnvironment.sandbox)
+
 #if os(iOS) || os(tvOS)
     window = UIWindow(frame: UIScreen.main.bounds)
     factory.startReactNative(
@@ -37,6 +41,10 @@ class AppDelegate: ExpoAppDelegate {
     open url: URL,
     options: [UIApplication.OpenURLOptionsKey: Any] = [:]
   ) -> Bool {
+    // Xử lý callback từ ZaloPay App
+    if ZaloPaySDK.sharedInstance().application(app, open: url, sourceApplication: "vn.com.vng.zalopay", annotation: nil) {
+        return true
+    }
     return super.application(app, open: url, options: options) || RCTLinkingManager.application(app, open: url, options: options)
   }
 

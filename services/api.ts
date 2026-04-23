@@ -122,7 +122,7 @@ if (DEBUG_API === 'true') {
 }
 
 // Tạo axios instance
-const apiClient = axios.create({
+export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 15000, // Tăng timeout cho iOS
   headers: {

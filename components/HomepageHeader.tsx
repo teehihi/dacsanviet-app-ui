@@ -33,6 +33,7 @@ export const HomepageHeader: React.FC<HomepageHeaderProps> = ({ user, onAvatarPr
   const handleSearchSubmit = () => {
     if (searchQuery.trim()) {
       onSearchSubmit(searchQuery.trim());
+      setSearchQuery(''); // Clear sau khi navigate
     }
   };
 

@@ -52,6 +52,11 @@ target 'DacSanVietUI' do
     :privacy_file_aggregation_enabled => podfile_properties['apple.privacyManifestAggregationEnabled'] != 'false',
   )
 
+  # ZaloPay SDK - pre-built framework
+  pod 'zpdk', :path => '../node_modules' rescue nil
+  # Nếu dòng trên lỗi, link trực tiếp vào thư mục
+  # pod 'zpdk', :vendored_frameworks => 'DacSanVietUI/zpdk.framework'
+
   post_install do |installer|
     react_native_post_install(
       installer,

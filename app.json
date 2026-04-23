@@ -68,7 +68,8 @@
             "ndkVersion": "27.0.12077973"
           }
         }
-      ]
+      ],
+      "./modules/zalopay/withZaloPay"
     ]
   }
 }

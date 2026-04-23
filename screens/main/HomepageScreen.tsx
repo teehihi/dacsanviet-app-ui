@@ -134,7 +134,11 @@ const HomepageScreen: React.FC<HomepageScreenProps> = ({ navigation }) => {
   }, []);
 
   const handleSearchSubmit = (query: string) => {
-    navigation.navigate('Search', { initialQuery: query });
+    // Navigate đến tab Search, rồi navigate đến SearchMain screen bên trong với params
+    (navigation as any).navigate('Search', {
+      screen: 'SearchMain',
+      params: { initialQuery: query },
+    });
   };
 
   const handleProductPress = (product: Product) => {

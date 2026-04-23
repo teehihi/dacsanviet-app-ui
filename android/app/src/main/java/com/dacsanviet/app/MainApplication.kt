@@ -1,4 +1,4 @@
-package com.anonymous.BaiTapTuan1_TypeScript
+package com.dacsanviet.app
 
 import android.app.Application
 import android.content.res.Configuration
@@ -14,6 +14,9 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ExpoReactHostFactory
 
+import vn.zalopay.sdk.ZaloPaySDK
+import vn.zalopay.sdk.Environment
+
 class MainApplication : Application(), ReactApplication {
 
   override val reactHost: ReactHost by lazy {
@@ -21,8 +24,7 @@ class MainApplication : Application(), ReactApplication {
       context = applicationContext,
       packageList =
         PackageList(this).packages.apply {
-          // Packages that cannot be autolinked yet can be added manually here, for example:
-          // add(MyReactNativePackage())
+          add(PayZaloPackage())
         }
     )
   }
@@ -36,6 +38,8 @@ class MainApplication : Application(), ReactApplication {
     }
     loadReactNative(this)
     ApplicationLifecycleDispatcher.onApplicationCreate(this)
+    // Khởi tạo ZaloPay SDK (sandbox app_id = 2554)
+    ZaloPaySDK.init(2554, Environment.SANDBOX)
   }
 
   override fun onConfigurationChanged(newConfig: Configuration) {

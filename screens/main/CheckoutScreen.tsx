@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, Alert,
   ActivityIndicator, StatusBar, StyleSheet, Image, TextInput,
-  Modal, FlatList,
+  Modal, FlatList, Linking, SafeAreaView,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';import { LinearGradient } from 'expo-linear-gradient';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useCartStore } from '../../store/cartStore';
 import { useAddressStore } from '../../store/addressStore';
-import { ApiService, getProductImage } from '../../services/api';
+import { ApiService, getProductImage, apiClient } from '../../services/api';
+import { payWithZaloPay, isZaloPayAvailable } from '../../modules/zalopay';
+import { WebView } from 'react-native-webview';
 
 const CheckoutScreen = () => {
   const navigation = useNavigation();
@@ -22,6 +23,9 @@ const CheckoutScreen = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [couponCode, setCouponCode] = useState('');
+  const [vnpayUrl, setVnpayUrl] = useState<string | null>(null);
+  const [zaloPayUrl, setZaloPayUrl] = useState<string | null>(null);
+  const [zaloPayOrderCode, setZaloPayOrderCode] = useState<string | null>(null);
   const [appliedCoupon, setAppliedCoupon] = useState<any>(routeParams.appliedCoupon || null);
   const [validatingCoupon, setValidatingCoupon] = useState(false);
   const [pointsData, setPointsData] = useState<any>(null);
@@ -117,25 +121,115 @@ const CheckoutScreen = () => {
 
       const response = await ApiService.createOrder(orderData);
       if (response.success && response.data) {
-        await clearCart();
         const orderCode = response.data.order.order_number || response.data.order.code || response.data.order.id;
-        Alert.alert(
-          'Đặt hàng thành công!',
-          `Mã đơn hàng: ${orderCode}\nChúng tôi sẽ xác nhận trong vòng 30 phút.`,
-          [{
-            text: 'Xem đơn hàng',
-            onPress: () => {
-              // Pop về root của stack hiện tại (xóa Cart, Checkout khỏi history)
-              (navigation as any).popToTop();
-              // Rồi navigate sang tab Orders
-              (navigation as any).navigate('Orders');
+        const orderId = response.data.order.id || orderCode;
+
+        if (paymentMethod === 'VNPAY') {
+          // Lấy URL thanh toán VNPAY
+          const payRes = await apiClient.post('/payment/vnpay/create-url', {
+            orderId: orderCode,
+            amount: total,
+            orderInfo: `Thanh toan don hang ${orderCode}`,
+          });
+          if (payRes.data?.success && payRes.data?.data?.paymentUrl) {
+            const url = payRes.data.data.paymentUrl;
+            setVnpayUrl(url);
+            // Mở browser ngoài để thanh toán
+            await Linking.openURL(url);
+            await clearCart();
+            // Sau khi user quay lại app, hỏi kết quả
+            Alert.alert(
+              'Kết quả thanh toán',
+              'Bạn đã hoàn tất thanh toán chưa?',
+              [
+                {
+                  text: 'Đã thanh toán',
+                  onPress: () => {
+                    (navigation as any).popToTop();
+                    (navigation as any).navigate('Orders');
+                  }
+                },
+                { 
+                  text: 'Chưa / Huỷ', 
+                  style: 'cancel',
+                  onPress: () => {
+                    (navigation as any).popToTop();
+                    (navigation as any).navigate('Orders');
+                  }
+                }
+              ]
+            );
+          } else {
+            await clearCart();
+            Alert.alert('Lỗi', 'Không thể tạo URL thanh toán VNPAY. Bạn có thể thanh toán lại ở mục Đơn hàng.', [{
+              text: 'Đóng',
+              onPress: () => { (navigation as any).popToTop(); (navigation as any).navigate('Orders'); }
+            }]);
+          }
+        } else if (paymentMethod === 'ZALOPAY') {
+          // ZaloPay App-to-App
+          const zpRes = await apiClient.post('/payment/zalopay/create-order', {
+            orderId: orderCode,
+            amount: Math.round(total), // ZaloPay cần số nguyên
+            description: `Thanh toan don hang ${orderCode}`,
+          });
+          if (zpRes.data?.success && (zpRes.data?.data?.zpTransToken || zpRes.data?.data?.orderUrl)) {
+            const { zpTransToken, orderUrl } = zpRes.data.data;
+            await clearCart();
+
+            if (isZaloPayAvailable && zpTransToken) {
+              // Dùng native SDK (đúng theo docs ZaloPay)
+              setIsSubmitting(false);
+              const result = await payWithZaloPay(zpTransToken);
+              if (result.returnCode === 1) {
+                Alert.alert('Thanh toán thành công! 🎉', 'Đơn hàng đã được xác nhận.', [{
+                  text: 'Xem đơn hàng',
+                  onPress: () => { (navigation as any).popToTop(); (navigation as any).navigate('Orders'); }
+                }]);
+              } else if (result.returnCode === 4) {
+                Alert.alert('Đã huỷ', 'Bạn đã huỷ thanh toán. Đơn hàng vẫn được lưu, bạn có thể thanh toán lại sau.', [{
+                  text: 'Về Đơn hàng',
+                  onPress: () => { (navigation as any).popToTop(); (navigation as any).navigate('Orders'); }
+                }]);
+              } else {
+                Alert.alert('Lỗi thanh toán', `Thanh toán thất bại (code: ${result.returnCode}). Đơn hàng vẫn được lưu.`, [{
+                  text: 'Về Đơn hàng',
+                  onPress: () => { (navigation as any).popToTop(); (navigation as any).navigate('Orders'); }
+                }]);
+              }
+            } else {
+              // Fallback: WebView nếu native SDK chưa sẵn
+              setZaloPayUrl(orderUrl);
+              setZaloPayOrderCode(orderCode);
+              setIsSubmitting(false);
+              return;
             }
-          }]
-        );
+          } else {
+            await clearCart();
+            Alert.alert('Lỗi', 'Không thể tạo đơn ZaloPay. Bạn có thể thanh toán lại ở mục Đơn hàng.', [{
+              text: 'Đóng',
+              onPress: () => { (navigation as any).popToTop(); (navigation as any).navigate('Orders'); }
+            }]);
+          }
+        } else {
+          await clearCart();
+          Alert.alert(
+            'Đặt hàng thành công!',
+            `Mã đơn hàng: ${orderCode}\nChúng tôi sẽ xác nhận trong vòng 30 phút.`,
+            [{
+              text: 'Xem đơn hàng',
+              onPress: () => {
+                (navigation as any).popToTop();
+                (navigation as any).navigate('Orders');
+              }
+            }]
+          );
+        }
       } else {
         Alert.alert('Lỗi', response.message || 'Không thể đặt hàng. Vui lòng thử lại.');
       }
-    } catch {
+    } catch (error) {
+      console.error('Checkout error:', error);
       Alert.alert('Lỗi', 'Không thể đặt hàng. Vui lòng thử lại.');
     } finally { setIsSubmitting(false); }
   };
@@ -143,6 +237,8 @@ const CheckoutScreen = () => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#16a34a" />
+
+      {/* VNPAY thanh toán qua browser ngoài - không cần WebView */}
       
       {/* Header */}
       <LinearGradient colors={['#16a34a', '#15803d']} style={styles.header}>
@@ -322,17 +418,17 @@ const CheckoutScreen = () => {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.paymentOption, paymentMethod === 'MOMO' && styles.paymentSelected]}
-            onPress={() => setPaymentMethod('MOMO')}
+            style={[styles.paymentOption, paymentMethod === 'ZALOPAY' && styles.paymentSelected]}
+            onPress={() => setPaymentMethod('ZALOPAY')}
           >
             <Ionicons
-              name={paymentMethod === 'MOMO' ? 'radio-button-on' : 'radio-button-off'}
+              name={paymentMethod === 'ZALOPAY' ? 'radio-button-on' : 'radio-button-off'}
               size={24}
-              color={paymentMethod === 'MOMO' ? '#16a34a' : '#9ca3af'}
+              color={paymentMethod === 'ZALOPAY' ? '#16a34a' : '#9ca3af'}
             />
             <View style={styles.paymentInfo}>
-              <Text style={styles.paymentName}>Ví điện tử MoMo</Text>
-              <Text style={styles.paymentDesc}>Thanh toán qua ứng dụng MoMo</Text>
+              <Text style={styles.paymentName}>Ví ZaloPay</Text>
+              <Text style={styles.paymentDesc}>Thanh toán qua ứng dụng ZaloPay</Text>
             </View>
           </TouchableOpacity>
 
@@ -502,6 +598,79 @@ const CheckoutScreen = () => {
             )}
           </View>
         </View>
+      </Modal>
+
+      {/* ZaloPay WebView Modal */}
+      <Modal
+        visible={!!zaloPayUrl}
+        animationType="slide"
+        onRequestClose={() => {
+          setZaloPayUrl(null);
+          (navigation as any).popToTop();
+          (navigation as any).navigate('Orders');
+        }}
+      >
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#0068ff' }}>
+          {/* Header */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: '#0068ff', paddingHorizontal: 12, paddingVertical: 10, gap: 10 }}>
+            <TouchableOpacity
+              onPress={() => {
+                setZaloPayUrl(null);
+                (navigation as any).popToTop();
+                (navigation as any).navigate('Orders');
+              }}
+              style={{ padding: 6 }}
+            >
+              <Ionicons name="close" size={24} color="white" />
+            </TouchableOpacity>
+            <Text style={{ color: 'white', fontWeight: '700', fontSize: 16, flex: 1 }}>Thanh toán ZaloPay QC</Text>
+          </View>
+
+          {zaloPayUrl && (
+            <WebView
+              source={{ uri: zaloPayUrl }}
+              style={{ flex: 1 }}
+              javaScriptEnabled
+              domStorageEnabled
+              startInLoadingState
+              renderLoading={() => (
+                <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, justifyContent: 'center', alignItems: 'center', backgroundColor: 'white' }}>
+                  <ActivityIndicator size="large" color="#0068ff" />
+                  <Text style={{ marginTop: 12, color: '#6b7280', fontSize: 14 }}>Đang tải trang thanh toán...</Text>
+                </View>
+              )}
+              onShouldStartLoadWithRequest={(request) => {
+                const url = request.url;
+                // Intercept ZaloPay app scheme - mở app ZaloPay QC
+                if (
+                  url.startsWith('zalopay://') ||
+                  url.startsWith('zalopayqc://') ||
+                  url.startsWith('vn.zalopay://')
+                ) {
+                  Linking.openURL(url).catch(() => {
+                    Alert.alert('Lỗi', 'Không thể mở ứng dụng ZaloPay QC. Vui lòng kiểm tra đã cài app chưa.');
+                  });
+                  return false;
+                }
+                return true;
+              }}
+              onNavigationStateChange={(navState) => {
+                // Nếu trang redirect về deep link của app (sau khi thanh toán xong)
+                if (navState.url?.startsWith('dacsanviet://')) {
+                  setZaloPayUrl(null);
+                  if (navState.url.includes('success')) {
+                    Alert.alert('Thanh toán thành công! 🎉', 'Đơn hàng đã được xác nhận.', [
+                      { text: 'Xem đơn hàng', onPress: () => { (navigation as any).popToTop(); (navigation as any).navigate('Orders'); } }
+                    ]);
+                  } else {
+                    (navigation as any).popToTop();
+                    (navigation as any).navigate('Orders');
+                  }
+                }
+              }}
+            />
+          )}
+        </SafeAreaView>
       </Modal>
     </View>
   );

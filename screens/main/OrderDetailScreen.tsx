@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { ApiService, getProductImage } from '../../services/api';
+import { ApiService, apiClient, getProductImage } from '../../services/api';
 import { Order, OrderStatus } from '../../types/order';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 
@@ -57,7 +57,29 @@ const OrderDetailScreen = () => {
       setLoading(true);
       const response = await ApiService.getOrderById(orderId);
       if (response.success && response.data) {
-        setOrder(response.data.order);
+        let currentOrder = response.data.order;
+        
+        // Auto-check ZaloPay status if it's PENDING
+        const orderCode = currentOrder.order_number || currentOrder.id;
+        const pStatus = currentOrder.paymentStatus || (currentOrder as any).payment_status;
+        
+        if (currentOrder.paymentMethod === 'ZALOPAY' && (pStatus === 'PENDING' || !pStatus)) {
+          try {
+            console.log('🔄 Checking ZaloPay status for:', orderCode);
+            const zpStatus = await apiClient.get(`/payment/zalopay/status/${orderCode}`);
+            if (zpStatus.data?.success && zpStatus.data?.isPaid) {
+              console.log('✅ ZaloPay confirmed PAID. Reloading...');
+              const newRes = await ApiService.getOrderById(orderId);
+              if (newRes.success && newRes.data) {
+                currentOrder = newRes.data.order;
+              }
+            }
+          } catch (e) {
+            console.log('Ignored ZaloPay status check error');
+          }
+        }
+        
+        setOrder(currentOrder);
         setReviewStatus(response.data.reviewStatus || null);
       } else {
         Alert.alert('Lỗi', 'Không tìm thấy đơn hàng');
@@ -115,6 +137,46 @@ const OrderDetailScreen = () => {
         },
       ]
     );
+  };
+
+  const handleRetryPayment = async () => {
+    if (!order) return;
+    try {
+      setLoading(true);
+      const orderCode = order.order_number || order.id;
+      const total = order.totalAmount;
+      
+      if (order.paymentMethod === 'VNPAY') {
+        const payRes = await apiClient.post('/payment/vnpay/create-url', {
+          orderId: orderCode,
+          amount: total,
+          orderInfo: `Thanh toan don hang ${orderCode}`,
+        });
+        if (payRes.data?.success && payRes.data?.data?.paymentUrl) {
+          await Linking.openURL(payRes.data.data.paymentUrl);
+        } else {
+          Alert.alert('Lỗi', 'Không thể tạo URL thanh toán VNPAY');
+        }
+      } else if (order.paymentMethod === 'ZALOPAY') {
+        // MOMO is actually using ZaloPay in this logic flow
+        const zpRes = await apiClient.post('/payment/zalopay/create-order', {
+          orderId: orderCode,
+          amount: total,
+          description: `Thanh toan don hang ${orderCode}`,
+        });
+        if (zpRes.data?.success && zpRes.data?.data?.orderUrl) {
+          console.log('🔗 [ZALOPAY SANDBOX URL]:', zpRes.data.data.orderUrl);
+          await Linking.openURL(zpRes.data.data.orderUrl);
+        } else {
+          Alert.alert('Lỗi', 'Không thể tạo đơn ZaloPay');
+        }
+      }
+    } catch (e) {
+      console.error('Retry payment error:', e);
+      Alert.alert('Lỗi', 'Có lỗi xảy ra khi tạo lại thanh toán');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getStepTimestamp = (step: typeof STATUS_STEPS[0], order: Order): string => {
@@ -404,7 +466,7 @@ const OrderDetailScreen = () => {
               {(() => {
                 switch (order.paymentMethod) {
                   case 'COD': return 'Thanh toán khi nhận hàng';
-                  case 'MOMO': return 'Ví điện tử MoMo';
+                  case 'ZALOPAY': return 'Ví điện tử ZaloPay';
                   case 'VNPAY': return 'VNPay';
                   case 'BANK_TRANSFER': return 'Chuyển khoản ngân hàng';
                   case 'CREDIT_CARD': return 'Thẻ tín dụng/Ghi nợ';
@@ -413,9 +475,35 @@ const OrderDetailScreen = () => {
               })()}
             </Text>
           </View>
+
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
             <Text style={{ color: '#6b7280', fontSize: 13 }}>Trạng thái</Text>
-            <Text style={{ color: '#ef4444', fontSize: 13, fontWeight: '500' }}>Chưa thanh toán</Text>
+            {(() => {
+              // Kiểm tra tất cả các field có thể có
+              const s1 = order.paymentStatus;
+              const s2 = (order as any).payment_status;
+              const rawStatus = s1 || s2 || 'PENDING';
+              const paymentStatus = String(rawStatus).toUpperCase();
+              
+              console.log('--- UI CHECK ---', { s1, s2, final: paymentStatus });
+              
+              let color = '#f97316';
+              let label = 'Chưa thanh toán';
+              
+              // Chấp nhận mọi biến thể của thành công
+              if (paymentStatus === 'PAID' || 
+                  paymentStatus === 'COMPLETED' || 
+                  paymentStatus === 'SUCCESS') { 
+                color = '#16a34a'; 
+                label = 'Đã thanh toán'; 
+              }
+              else if (paymentStatus === 'FAILED' || paymentStatus === 'CANCELLED') { 
+                color = '#ef4444'; 
+                label = 'Thanh toán thất bại'; 
+              }
+              
+              return <Text style={{ color, fontSize: 13, fontWeight: '500' }}>{label}</Text>;
+            })()}
           </View>
         </View>
 
@@ -465,7 +553,14 @@ const OrderDetailScreen = () => {
             <Text style={{ color: '#16a34a', fontWeight: '700', fontSize: 15 }}>Liên hệ người bán</Text>
           </TouchableOpacity>
 
-          {order.status === 'SHIPPING' ? (
+          {(order.paymentStatus === 'PENDING' || (order as any).payment_status === 'PENDING') && order.paymentMethod !== 'COD' && order.status !== 'CANCELLED' && order.status !== 'CANCEL_REQUESTED' && order.status === 'PENDING' ? (
+            <TouchableOpacity
+              style={{ flex: 1, backgroundColor: '#16a34a', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
+              onPress={handleRetryPayment}
+            >
+              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Thanh toán lại</Text>
+            </TouchableOpacity>
+          ) : order.status === 'SHIPPING' ? (
             <TouchableOpacity
               style={{ flex: 1, backgroundColor: '#16a34a', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
               onPress={() => Alert.alert('Theo dõi', 'Tính năng đang phát triển')}
