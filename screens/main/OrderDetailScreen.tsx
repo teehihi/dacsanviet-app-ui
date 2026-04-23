@@ -431,13 +431,14 @@ const OrderDetailScreen = () => {
                 style={{ backgroundColor: '#16a34a', borderRadius: 12, paddingVertical: 14, alignItems: 'center' }}
                 onPress={() => {
                   if (order.items.length > 0) {
-                    const item = order.items[0];
                     (navigation as any).navigate('WriteReview', {
                       orderId: order.numericId || order.id,
-                      productId: item.productId,
-                      productName: item.productName,
-                      productImage: item.productImage,
-                      category: (item as any).category || '',
+                      items: order.items.map((item: any) => ({
+                        productId: item.productId,
+                        productName: item.productName,
+                        productImage: item.productImage,
+                        category: item.category || '',
+                      })),
                     });
                   }
                 }}

@@ -23,8 +23,8 @@ type TabKey = 'ALL' | 'PENDING' | 'SHIPPING' | 'DELIVERED' | 'CANCELLED';
 const TABS: { key: TabKey; label: string; statuses: OrderStatus[] }[] = [
   { key: 'ALL', label: 'Tất cả', statuses: [] },
   { key: 'PENDING', label: 'Chờ xác nhận', statuses: ['NEW', 'PENDING', 'CONFIRMED', 'PROCESSING', 'PREPARING'] },
-  { key: 'SHIPPING', label: 'Đang giao', statuses: ['SHIPPING', 'SHIPPED'] },
-  { key: 'DELIVERED', label: 'Hoàn thành', statuses: ['DELIVERED', 'COMPLETE', 'complete'] },
+  { key: 'SHIPPING', label: 'Đang giao', statuses: ['SHIPPING'] },
+  { key: 'DELIVERED', label: 'Hoàn thành', statuses: ['DELIVERED'] },
   { key: 'CANCELLED', label: 'Đã hủy', statuses: ['CANCELLED', 'CANCEL_REQUESTED'] },
 ];
 
@@ -45,6 +45,7 @@ const OrdersScreen = () => {
   const route = useRoute();
   const addItem = useCartStore((state) => state.addItem);
   const [reorderingId, setReorderingId] = useState<string | null>(null);
+  const [reviewedOrderIds, setReviewedOrderIds] = useState<Set<string>>(new Set());
   const [orders, setOrders] = useState<Order[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -69,7 +70,23 @@ const OrdersScreen = () => {
       setLoading(true);
       const response = await ApiService.getUserOrders({ page: 1, limit: 50 });
       if (response.success && response.data) {
-        setOrders(response.data);
+        const loadedOrders: Order[] = response.data;
+        setOrders(loadedOrders);
+
+        // Load review status cho các đơn DELIVERED
+        const deliveredOrders = loadedOrders.filter(o => o.status === 'DELIVERED');
+        const reviewedIds = new Set<string>();
+        await Promise.all(
+          deliveredOrders.map(async (o) => {
+            try {
+              const res = await ApiService.getOrderById(o.id);
+              if (res.success && (res.data as any)?.reviewStatus?.allReviewed) {
+                reviewedIds.add(o.id);
+              }
+            } catch {}
+          })
+        );
+        setReviewedOrderIds(reviewedIds);
       } else {
         setOrders([]);
       }
@@ -262,24 +279,68 @@ const OrdersScreen = () => {
 
         {/* Action buttons */}
         {order.status === 'DELIVERED' && (
-          <TouchableOpacity
-            style={{
-              backgroundColor: reorderingId === order.id ? '#15803d' : '#16a34a',
-              borderRadius: 10, paddingVertical: 12, alignItems: 'center',
-              opacity: reorderingId === order.id ? 0.8 : 1,
-            }}
-            onPress={() => handleReorder(order)}
-            disabled={reorderingId === order.id}
-          >
-            {reorderingId === order.id ? (
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <ActivityIndicator size="small" color="#fff" />
-                <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Đang thêm...</Text>
-              </View>
-            ) : (
-              <Text style={{ color: '#fff', fontWeight: '700', fontSize: 15 }}>Mua lại</Text>
-            )}
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            {/* Nút Đánh giá */}
+            {(() => {
+              const reviewed = reviewedOrderIds.has(order.id);
+              return (
+                <TouchableOpacity
+                  style={{
+                    flex: 1,
+                    borderRadius: 10,
+                    paddingVertical: 12,
+                    alignItems: 'center',
+                    backgroundColor: reviewed ? '#f3f4f6' : '#fff',
+                    borderWidth: 1.5,
+                    borderColor: reviewed ? '#d1d5db' : '#16a34a',
+                  }}
+                  disabled={reviewed}
+                  onPress={() => {
+                    if (order.items.length > 0) {
+                      (navigation as any).navigate('WriteReview', {
+                        orderId: order.numericId || order.id,
+                        items: order.items.map((item: any) => ({
+                          productId: item.productId,
+                          productName: item.productName,
+                          productImage: item.productImage,
+                          category: item.category || '',
+                        })),
+                      });
+                    }
+                  }}
+                >
+                  <Text style={{
+                    fontWeight: '600',
+                    fontSize: 14,
+                    color: reviewed ? '#9ca3af' : '#16a34a',
+                  }}>
+                    {reviewed ? 'Đã đánh giá' : 'Đánh giá'}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })()}
+
+            {/* Nút Mua lại */}
+            <TouchableOpacity
+              style={{
+                flex: 1,
+                backgroundColor: reorderingId === order.id ? '#15803d' : '#16a34a',
+                borderRadius: 10, paddingVertical: 12, alignItems: 'center',
+                opacity: reorderingId === order.id ? 0.8 : 1,
+              }}
+              onPress={() => handleReorder(order)}
+              disabled={reorderingId === order.id}
+            >
+              {reorderingId === order.id ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <ActivityIndicator size="small" color="#fff" />
+                  <Text style={{ color: '#fff', fontWeight: '600', fontSize: 14 }}>Đang thêm...</Text>
+                </View>
+              ) : (
+                <Text style={{ color: '#fff', fontWeight: '600', fontSize: 14 }}>Mua lại</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         )}
 
         {order.status === 'SHIPPING' && (
