@@ -49,8 +49,14 @@ const getApiHost = () => {
 
 const API_HOST = getApiHost();
 const PORT = API_PORT || '3001';
-const API_BASE_URL = `http://${API_HOST}:${PORT}/api`;
-const API_SERVER_URL = `http://${API_HOST}:${PORT}`;
+
+// Tự động sử dụng https và bỏ port nếu dùng Ngrok
+const isNgrok = API_HOST.includes('ngrok-free.dev') || API_HOST.includes('ngrok-free.app');
+const protocol = isNgrok ? 'https' : 'http';
+const hostWithPort = isNgrok ? API_HOST : `${API_HOST}:${PORT}`;
+
+const API_BASE_URL = `${protocol}://${hostWithPort}/api`;
+const API_SERVER_URL = `${protocol}://${hostWithPort}`;
 
 // Helper function to format image URLs
 export const formatImageUrl = (imageUrl: string | null | undefined): string => {
