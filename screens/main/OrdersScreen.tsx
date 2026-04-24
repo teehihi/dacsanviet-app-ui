@@ -17,6 +17,7 @@ import { ApiService, getProductImage } from '../../services/api';
 import { Order, OrderStatus } from '../../types/order';
 import { useNavigation, NavigationProp, CommonActions, useRoute, useFocusEffect } from '@react-navigation/native';
 import { useCartStore } from '../../store/cartStore';
+import { contactSeller } from '../../utils/contactUtils';
 
 type TabKey = 'ALL' | 'PENDING' | 'SHIPPING' | 'DELIVERED' | 'CANCELLED';
 
@@ -377,7 +378,7 @@ const OrdersScreen = () => {
                 paddingVertical: 11,
                 alignItems: 'center',
               }}
-              onPress={() => navigation.navigate('OrderDetail', { orderId: order.id })}
+              onPress={() => contactSeller('facebook', 'nhatthien.nguyen.566')}
             >
               <Text style={{ color: '#fff', fontWeight: '600', fontSize: 14 }}>Liên hệ</Text>
             </TouchableOpacity>

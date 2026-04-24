@@ -15,6 +15,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ApiService, apiClient, getProductImage } from '../../services/api';
 import { Order, OrderStatus } from '../../types/order';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { contactSeller } from '../../utils/contactUtils';
 
 const STATUS_STEPS = [
   { status: 'NEW', label: 'Đơn hàng đã được đặt', icon: 'receipt-outline' },
@@ -548,7 +549,7 @@ const OrderDetailScreen = () => {
               paddingVertical: 14,
               alignItems: 'center',
             }}
-            onPress={() => Alert.alert('Liên hệ', 'Tính năng đang phát triển')}
+            onPress={() => contactSeller('facebook', 'nhatthien.nguyen.566')}
           >
             <Text style={{ color: '#16a34a', fontWeight: '700', fontSize: 15 }}>Liên hệ người bán</Text>
           </TouchableOpacity>
